@@ -1,3 +1,33 @@
 # https://www.robotstxt.org/robotstxt.html
+# Excel Meet - Robots.txt
+
+# Allow all crawlers
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow private/sensitive pages
+Disallow: /admin/
+Disallow: /api/
+Disallow: /profile/edit
+Disallow: /settings/
+Disallow: /messages/
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://excelmeet.com/sitemap.xml
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

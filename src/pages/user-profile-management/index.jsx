@@ -7,6 +7,7 @@ import PersonalInfoSection from './components/PersonalInfoSection';
 import ProfessionalSection from './components/ProfessionalSection';
 import SubscriptionSection from './components/SubscriptionSection';
 import AccountSettingsSection from './components/AccountSettingsSection';
+import NigerianProfileSection from './components/NigerianProfileSection';
 import { useNavigate } from 'react-router-dom';
 
 const UserProfileManagement = () => {
@@ -60,6 +61,9 @@ const UserProfileManagement = () => {
 
             {/* Personal Information */}
             <PersonalInfoSection userProfile={userProfile} />
+
+            {/* Nigerian Profile Section */}
+            <NigerianProfileSection />
 
             {/* Professional Information (for professionals) */}
             {userProfile?.role === 'professional' && (

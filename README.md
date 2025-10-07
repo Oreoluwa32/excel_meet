@@ -1,107 +1,255 @@
-# React
+# Excel Meet
 
-A modern React-based project utilizing the latest frontend technologies and tools for building responsive web applications.
+> A professional networking platform connecting Nigerian professionals across industries
 
-## 🚀 Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.2.0-blue)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.0.0-purple)](https://vitejs.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-Latest-green)](https://supabase.com/)
 
-- **React 18** - React version with improved rendering and concurrent features
-- **Vite** - Lightning-fast build tool and development server
-- **Redux Toolkit** - State management with simplified Redux setup
-- **TailwindCSS** - Utility-first CSS framework with extensive customization
-- **React Router v6** - Declarative routing for React applications
-- **Data Visualization** - Integrated D3.js and Recharts for powerful data visualization
-- **Form Management** - React Hook Form for efficient form handling
-- **Animation** - Framer Motion for smooth UI animations
-- **Testing** - Jest and React Testing Library setup
+## 🌟 Features
 
-## 📋 Prerequisites
+- **Professional Networking**: Connect with professionals across various industries in Nigeria
+- **Real-time Messaging**: Chat with connections in real-time
+- **Job Board**: Post and discover job opportunities
+- **Events**: Create and join professional events and meetups
+- **Skills Showcase**: Highlight your expertise and find talent
+- **Secure Authentication**: Email/password and social login options
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Offline Support**: Continue browsing with offline indicators
+- **Performance Optimized**: Code splitting, lazy loading, and caching
+- **SEO Friendly**: Dynamic meta tags and sitemap generation
 
-- Node.js (v14.x or higher)
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 16.x or higher
 - npm or yarn
+- Supabase account ([Sign up here](https://supabase.com))
 
-## 🛠️ Installation
+### Installation
 
-1. Install dependencies:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/excel-meet.git
+   cd excel-meet
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
-   # or
-   yarn install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
    ```
    
-2. Start the development server:
-   ```bash
-   npm start
-   # or
-   yarn start
+   Edit `.env` and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-## 📁 Project Structure
+4. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+## 📚 Documentation
+
+- [Setup Guide](./SETUP.md) - Detailed setup instructions
+- [Deployment Guide](./DEPLOYMENT.md) - How to deploy to production
+- [Production Checklist](./PRODUCTION_READY_CHECKLIST.md) - Pre-launch checklist
+
+## 🏗️ Project Structure
 
 ```
-react_app/
-├── public/             # Static assets
+excel-meet/
+├── public/              # Static assets
+│   ├── manifest.json    # PWA manifest
+│   └── robots.txt       # SEO robots file
 ├── src/
-│   ├── components/     # Reusable UI components
+│   ├── components/      # Reusable React components
+│   │   ├── Modal.jsx
+│   │   ├── Toast.jsx
+│   │   ├── Pagination.jsx
+│   │   └── ...
+│   ├── hooks/          # Custom React hooks
+│   │   ├── useDebounce.js
+│   │   ├── useFetch.js
+│   │   ├── useLocalStorage.js
+│   │   └── ...
 │   ├── pages/          # Page components
-│   ├── styles/         # Global styles and Tailwind configuration
-│   ├── App.jsx         # Main application component
-│   ├── Routes.jsx      # Application routes
-│   └── index.jsx       # Application entry point
-├── .env                # Environment variables
-├── index.html          # HTML template
-├── package.json        # Project dependencies and scripts
-├── tailwind.config.js  # Tailwind CSS configuration
-└── vite.config.js      # Vite configuration
+│   ├── utils/          # Utility functions
+│   │   ├── apiClient.js
+│   │   ├── logger.js
+│   │   ├── security.js
+│   │   ├── validation.js
+│   │   └── ...
+│   ├── App.jsx         # Main app component
+│   └── main.jsx        # Entry point
+├── .env.example        # Environment variables template
+├── .gitignore          # Git ignore rules
+├── netlify.toml        # Netlify deployment config
+├── vercel.json         # Vercel deployment config
+├── vite.config.mjs     # Vite configuration
+└── package.json        # Dependencies and scripts
 ```
 
-## 🧩 Adding Routes
-
-To add new routes to the application, update the `Routes.jsx` file:
-
-```jsx
-import { useRoutes } from "react-router-dom";
-import HomePage from "pages/HomePage";
-import AboutPage from "pages/AboutPage";
-
-const ProjectRoutes = () => {
-  let element = useRoutes([
-    { path: "/", element: <HomePage /> },
-    { path: "/about", element: <AboutPage /> },
-    // Add more routes as needed
-  ]);
-
-  return element;
-};
-```
-
-## 🎨 Styling
-
-This project uses Tailwind CSS for styling. The configuration includes:
-
-- Forms plugin for form styling
-- Typography plugin for text styling
-- Aspect ratio plugin for responsive elements
-- Container queries for component-specific responsive design
-- Fluid typography for responsive text
-- Animation utilities
-
-## 📱 Responsive Design
-
-The app is built with responsive design using Tailwind CSS breakpoints.
-
-
-## 📦 Deployment
-
-Build the application for production:
+## 🛠️ Available Scripts
 
 ```bash
-npm run build
+# Development
+npm run dev              # Start development server
+npm start               # Alias for dev
+
+# Building
+npm run build           # Build for production
+npm run build:prod      # Build with production env
+npm run build:staging   # Build with staging env
+
+# Preview
+npm run preview         # Preview production build locally
+
+# Code Quality
+npm run lint            # Run ESLint
+npm run lint:fix        # Fix ESLint errors
+npm run format          # Format code with Prettier
+
+# Analysis
+npm run analyze         # Analyze bundle size
 ```
+
+## 🔧 Tech Stack
+
+### Frontend
+- **React 18** - UI library
+- **Vite** - Build tool and dev server
+- **React Router** - Client-side routing
+- **Framer Motion** - Animations
+- **TailwindCSS** - Utility-first CSS framework
+- **Lucide React** - Icon library
+
+### Backend & Services
+- **Supabase** - Backend as a Service (Auth, Database, Storage)
+- **Axios** - HTTP client
+
+### State Management
+- **Redux Toolkit** - Global state management
+- **React Hook Form** - Form state management
+
+### Data Visualization
+- **Recharts** - Chart library
+- **D3.js** - Data visualization
+
+### Development Tools
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **PostCSS** - CSS processing
+
+## 🔐 Security Features
+
+- XSS protection with input sanitization
+- CSRF protection
+- Secure token generation
+- File upload validation
+- Rate limiting
+- Content Security Policy headers
+- Clickjacking prevention
+- Secure storage with encryption
+
+## 📊 Performance Optimizations
+
+- Code splitting by route and vendor
+- Lazy loading of components
+- Image optimization
+- Debouncing and throttling
+- Request caching
+- Service worker for offline support
+- Web Vitals monitoring
+
+## 🌐 Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## 📱 Progressive Web App (PWA)
+
+Excel Meet is a Progressive Web App that can be installed on your device:
+
+1. Visit the website on your mobile device
+2. Tap the "Add to Home Screen" option
+3. Launch the app from your home screen
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Coding Standards
+
+- Follow the existing code style
+- Write meaningful commit messages
+- Add comments for complex logic
+- Update documentation as needed
+- Test your changes thoroughly
+
+## 🐛 Bug Reports
+
+Found a bug? Please open an issue with:
+
+- Clear description of the problem
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshots (if applicable)
+- Browser and OS information
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Team
+
+- **Project Lead** - [Your Name](https://github.com/yourusername)
+- **Contributors** - [See all contributors](https://github.com/yourusername/excel-meet/graphs/contributors)
 
 ## 🙏 Acknowledgments
 
-- Built with [Rocket.new](https://rocket.new)
-- Powered by React and Vite
-- Styled with Tailwind CSS
+- [Supabase](https://supabase.com) for the amazing backend platform
+- [Vite](https://vitejs.dev) for the blazing fast build tool
+- [TailwindCSS](https://tailwindcss.com) for the utility-first CSS framework
+- All our contributors and supporters
 
-Built with ❤️ on Rocket.new
+## 📞 Support
+
+- **Email**: support@excelmeet.com
+- **Twitter**: [@excelmeet](https://twitter.com/excelmeet)
+- **Discord**: [Join our community](https://discord.gg/excelmeet)
+
+## 🗺️ Roadmap
+
+- [ ] Mobile app (React Native)
+- [ ] Advanced search filters
+- [ ] Video calling integration
+- [ ] AI-powered job matching
+- [ ] Company profiles
+- [ ] Premium subscriptions
+- [ ] Analytics dashboard
+- [ ] API for third-party integrations
+
+---
+
+Made with ❤️ in Nigeria
