@@ -8,7 +8,7 @@ const SubscriptionSection = ({ userProfile }) => {
   const plans = {
     free: {
       name: 'Free',
-      price: '$0',
+      price: '₦0',
       features: [
         'Basic job search',
         'Limited job applications (5/week)',
@@ -23,7 +23,7 @@ const SubscriptionSection = ({ userProfile }) => {
     },
     basic: {
       name: 'Basic',
-      price: '$9.99/month',
+      price: '₦4,000/month',
       features: [
         'Enhanced job search',
         'Unlimited job applications',
@@ -37,7 +37,7 @@ const SubscriptionSection = ({ userProfile }) => {
     },
     pro: {
       name: 'Pro',
-      price: '$19.99/month',
+      price: '₦8,000/month',
       features: [
         'Everything in Basic',
         'Access to premium professionals',
@@ -50,7 +50,7 @@ const SubscriptionSection = ({ userProfile }) => {
     },
     elite: {
       name: 'Elite',
-      price: '$39.99/month',
+      price: '₦16,000/month',
       features: [
         'Everything in Pro',
         'Dedicated account manager',

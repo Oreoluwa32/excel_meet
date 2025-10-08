@@ -194,6 +194,46 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Update password function
+  const updatePassword = async (newPassword) => {
+    try {
+      setAuthError(null);
+      const result = await authService.updatePassword(newPassword);
+
+      if (!result?.success) {
+        setAuthError(result?.error || "Password update failed");
+        return { success: false, error: result?.error };
+      }
+
+      return { success: true };
+    } catch (error) {
+      const errorMsg = "Something went wrong updating password. Please try again.";
+      setAuthError(errorMsg);
+      console.log("Update password error:", error);
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    try {
+      setAuthError(null);
+      const result = await authService.signInWithGoogle();
+
+      if (!result?.success) {
+        setAuthError(result?.error || "Google sign in failed");
+        return { success: false, error: result?.error };
+      }
+
+      return { success: true, data: result.data };
+    } catch (error) {
+      const errorMsg = "Something went wrong during Google sign in. Please try again.";
+      setAuthError(errorMsg);
+      console.log("Google sign in error:", error);
+      return { success: false, error: errorMsg };
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -204,6 +244,8 @@ export function AuthProvider({ children }) {
     signOut,
     updateProfile,
     resetPassword,
+    updatePassword,
+    signInWithGoogle,
     clearError: () => setAuthError(null),
   };
 

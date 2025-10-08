@@ -18,15 +18,15 @@ const PaymentMethodsSection = ({ user, onSave }) => {
       city: '',
       state: '',
       zipCode: '',
-      country: 'US'
+      country: 'NG'
     }
   });
 
   const countryOptions = [
-    { value: 'US', label: 'United States' },
-    { value: 'CA', label: 'Canada' },
-    { value: 'UK', label: 'United Kingdom' },
-    { value: 'AU', label: 'Australia' }
+    { value: 'NG', label: 'Nigeria' },
+    { value: 'GH', label: 'Ghana' },
+    { value: 'KE', label: 'Kenya' },
+    { value: 'ZA', label: 'South Africa' }
   ];
 
   const handleCardInputChange = (field, value) => {
@@ -69,7 +69,7 @@ const PaymentMethodsSection = ({ user, onSave }) => {
         city: '',
         state: '',
         zipCode: '',
-        country: 'US'
+        country: 'NG'
       }
     });
     setIsAddingCard(false);
@@ -277,21 +277,21 @@ const PaymentMethodsSection = ({ user, onSave }) => {
                     id: 1,
                     date: '2024-12-01',
                     description: 'Pro Plan Subscription',
-                    amount: '$19.99',
+                    amount: '₦8,000',
                     status: 'Completed'
                   },
                   {
                     id: 2,
                     date: '2024-11-01',
                     description: 'Pro Plan Subscription',
-                    amount: '$19.99',
+                    amount: '₦8,000',
                     status: 'Completed'
                   },
                   {
                     id: 3,
                     date: '2024-10-01',
                     description: 'Basic Plan Subscription',
-                    amount: '$9.99',
+                    amount: '₦4,000',
                     status: 'Completed'
                   }
                 ].map((transaction) => (

@@ -34,6 +34,15 @@ const RegisterForm = () => {
     if (error) setError('');
   };
 
+  const handleSelectChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      role: value
+    }));
+    // Clear error when user changes selection
+    if (error) setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -61,14 +70,17 @@ const RegisterForm = () => {
         location: formData.location,
       };
 
+      console.log('Attempting to register with:', { email: formData.email, userData });
       const result = await signUp(formData.email, formData.password, userData);
+      console.log('Registration result:', result);
       
       if (result?.success) {
-        navigate('/');
+        navigate('/home-dashboard');
       } else {
         setError(result?.error || 'Registration failed. Please try again.');
       }
     } catch (error) {
+      console.error('Registration error:', error);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -143,7 +155,7 @@ const RegisterForm = () => {
           id="role"
           name="role"
           value={formData.role}
-          onChange={handleChange}
+          onChange={handleSelectChange}
           options={roleOptions}
           className="w-full"
         />

@@ -35,14 +35,7 @@ export default defineConfig({
     tsconfigPaths(), 
     react({
       // Enable Fast Refresh
-      fastRefresh: true,
-      // Babel configuration for production optimizations
-      babel: {
-        plugins: [
-          // Remove PropTypes in production
-          ['babel-plugin-transform-react-remove-prop-types', { removeImport: true }]
-        ]
-      }
+      fastRefresh: true
     }), 
     tagger()
   ],

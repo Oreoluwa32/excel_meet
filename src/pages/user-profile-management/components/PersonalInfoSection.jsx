@@ -152,7 +152,7 @@ const PersonalInfoSection = ({ userProfile }) => {
               name="location"
               value={formData.location}
               onChange={handleChange}
-              placeholder="Enter your city, state"
+              placeholder="e.g., Lagos, Abuja, Port Harcourt"
             />
           ) : (
             <p className="text-gray-900">{userProfile?.location || 'Not provided'}</p>

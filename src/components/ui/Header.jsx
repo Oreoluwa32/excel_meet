@@ -33,9 +33,11 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
               <h1 className="text-xl font-bold text-gray-900">
                 {title || 'Excel-meet'}
               </h1>
-              <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                Preview Mode
-              </span>
+              {!user && (
+                <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  Preview Mode
+                </span>
+              )}
             </div>
           </div>
 

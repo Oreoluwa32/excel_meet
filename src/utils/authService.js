@@ -4,17 +4,21 @@ const authService = {
   // Sign in with email and password
   signIn: async (email, password) => {
     try {
+      console.log('AuthService: Attempting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('AuthService: Sign in error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('AuthService: Sign in successful:', data);
       return { success: true, data };
     } catch (error) {
+      console.error('AuthService: Sign in exception:', error);
       if (error?.message?.includes('Failed to fetch') || 
           error?.message?.includes('AuthRetryableFetchError')) {
         return { 
@@ -29,6 +33,7 @@ const authService = {
   // Sign up with email and password
   signUp: async (email, password, userData = {}) => {
     try {
+      console.log('AuthService: Attempting sign up for:', email, 'with metadata:', userData);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -38,11 +43,14 @@ const authService = {
       });
 
       if (error) {
+        console.error('AuthService: Sign up error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('AuthService: Sign up successful:', data);
       return { success: true, data };
     } catch (error) {
+      console.error('AuthService: Sign up exception:', error);
       if (error?.message?.includes('Failed to fetch') || 
           error?.message?.includes('AuthRetryableFetchError')) {
         return { 
@@ -158,6 +166,47 @@ const authService = {
       return { success: true };
     } catch (error) {
       return { success: false, error: 'An unexpected error occurred during password reset.' };
+    }
+  },
+
+  // Update password (for password reset flow)
+  updatePassword: async (newPassword) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'An unexpected error occurred while updating password.' };
+    }
+  },
+
+  // Sign in with Google OAuth
+  signInWithGoogle: async () => {
+    try {
+      console.log('AuthService: Attempting Google sign in');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/home-dashboard`,
+        },
+      });
+
+      if (error) {
+        console.error('AuthService: Google sign in error:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('AuthService: Google sign in initiated:', data);
+      return { success: true, data };
+    } catch (error) {
+      console.error('AuthService: Google sign in exception:', error);
+      return { success: false, error: 'An unexpected error occurred during Google sign in.' };
     }
   },
 

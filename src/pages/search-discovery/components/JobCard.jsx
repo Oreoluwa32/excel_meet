@@ -53,7 +53,7 @@ const JobCard = ({ job }) => {
         {job.budget && (
           <div className="flex items-center space-x-2 text-sm text-foreground font-medium">
             <Icon name="DollarSign" size={14} />
-            <span>${job.budget}</span>
+            <span>₦{job.budget}</span>
           </div>
         )}
       </div>

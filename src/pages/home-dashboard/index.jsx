@@ -6,7 +6,9 @@ import JobFeed from './components/JobFeed';
 import SubscriptionBanner from './components/SubscriptionBanner';
 import FilterChips from './components/FilterChips';
 import FloatingActionButton from '../../components/ui/FloatingActionButton';
+import CreateJobModal from './components/CreateJobModal';
 import { Plus } from 'lucide-react';
+import { supabase } from '../../utils/supabase';
 
 const HomeDashboard = () => {
   const { user, userProfile, loading } = useAuth();
@@ -15,9 +17,65 @@ const HomeDashboard = () => {
     urgency: '',
     location: ''
   });
+  const [isCreateJobModalOpen, setIsCreateJobModalOpen] = useState(false);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+  };
+
+  // Handle job creation
+  const handleCreateJob = async (jobData) => {
+    try {
+      console.log('Creating job with data:', jobData);
+
+      // TODO: Upload images to Supabase Storage
+      // const imageUrls = await uploadJobImages(jobData.images);
+
+      // Prepare job data for database
+      const jobRecord = {
+        user_id: user.id,
+        title: jobData.title,
+        category: jobData.category,
+        description: jobData.description,
+        budget_min: parseFloat(jobData.budget_min),
+        budget_max: jobData.budget_max ? parseFloat(jobData.budget_max) : null,
+        budget_type: jobData.budget_type,
+        urgency: jobData.urgency,
+        state: jobData.state,
+        city: jobData.city,
+        address: jobData.address || null,
+        start_date: jobData.start_date,
+        duration: jobData.duration || null,
+        duration_unit: jobData.duration_unit,
+        skills_required: jobData.skills_required,
+        requirements: jobData.requirements || null,
+        status: 'open',
+        // images: imageUrls, // Add when image upload is implemented
+        created_at: new Date().toISOString()
+      };
+
+      // Insert job into database
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert([jobRecord])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Job created successfully:', data);
+
+      // Show success message
+      alert('Job posted successfully! Professionals in your area will be notified.');
+
+      // Refresh the job feed (you might want to implement a refresh mechanism)
+      window.location.reload();
+    } catch (error) {
+      console.error('Error creating job:', error);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -93,8 +151,7 @@ const HomeDashboard = () => {
       <FloatingActionButton
         onClick={() => {
           if (user) {
-            // Handle job posting
-            console.log('Post job clicked');
+            setIsCreateJobModalOpen(true);
           } else {
             window.location.href = '/login-register';
           }
@@ -103,6 +160,13 @@ const HomeDashboard = () => {
       >
         <Plus size={24} />
       </FloatingActionButton>
+
+      {/* Create Job Modal */}
+      <CreateJobModal
+        isOpen={isCreateJobModalOpen}
+        onClose={() => setIsCreateJobModalOpen(false)}
+        onSubmit={handleCreateJob}
+      />
 
       <BottomTabNavigation />
     </div>

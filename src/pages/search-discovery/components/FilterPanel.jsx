@@ -27,10 +27,10 @@ const FilterPanel = ({
   ];
 
   const locationOptions = [
-    { value: '5', label: 'Within 5 miles' },
-    { value: '10', label: 'Within 10 miles' },
-    { value: '25', label: 'Within 25 miles' },
-    { value: '50', label: 'Within 50 miles' },
+    { value: '5', label: 'Within 5 km' },
+    { value: '10', label: 'Within 10 km' },
+    { value: '25', label: 'Within 25 km' },
+    { value: '50', label: 'Within 50 km' },
     { value: 'any', label: 'Any distance' }
   ];
 

@@ -52,19 +52,43 @@
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-4. **Start development server**
+4. **Set up Supabase** ⚠️ **IMPORTANT**
+   
+   You must manually set up your Supabase database:
+   
+   📖 **Follow the complete guide**: [SUPABASE_SETUP_GUIDE.md](./SUPABASE_SETUP_GUIDE.md)
+   
+   Quick summary:
+   - Create a Supabase project
+   - Run all 4 migration files in the SQL Editor (in order!)
+   - Create storage buckets (avatars, documents, company-logos)
+   - Configure authentication providers
+   
+   **This step is required** - the app won't work without it!
+
+5. **Verify Supabase setup**
    ```bash
    npm run dev
    ```
+   
+   Open browser console and run:
+   ```javascript
+   verifySupabaseSetup()
+   ```
+   
+   All checks should pass ✅
 
-5. **Open your browser**
+6. **Open your browser**
    Navigate to `http://localhost:5173`
 
 ## 📚 Documentation
 
+- **[Supabase Setup Guide](./SUPABASE_SETUP_GUIDE.md)** - ⚠️ **START HERE** - Complete Supabase setup
 - [Setup Guide](./SETUP.md) - Detailed setup instructions
 - [Deployment Guide](./DEPLOYMENT.md) - How to deploy to production
 - [Production Checklist](./PRODUCTION_READY_CHECKLIST.md) - Pre-launch checklist
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+- [Changelog](./CHANGELOG.md) - Version history
 
 ## 🏗️ Project Structure
 

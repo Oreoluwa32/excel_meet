@@ -2,36 +2,45 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
+import AvatarUploadModal from './AvatarUploadModal';
 
 const ProfileHeader = ({ user, onEditProfile }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   const handleEditClick = () => {
     setIsEditing(true);
-    onEditProfile();
+    if (onEditProfile) {
+      onEditProfile();
+    }
+  };
+
+  const handleAvatarClick = () => {
+    setShowAvatarModal(true);
   };
 
   return (
-    <div className="bg-card border-b border-border p-6">
-      <div className="flex flex-col items-center space-y-4 lg:flex-row lg:space-y-0 lg:space-x-6">
-        {/* Profile Image */}
-        <div className="relative">
-          <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-primary/20">
-            <Image
-              src={user.avatar}
-              alt={user.name}
-              className="w-full h-full object-cover"
-            />
+    <>
+      <div className="bg-card border-b border-border p-6">
+        <div className="flex flex-col items-center space-y-4 lg:flex-row lg:space-y-0 lg:space-x-6">
+          {/* Profile Image */}
+          <div className="relative">
+            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-primary/20">
+              <Image
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-card border-2 border-border"
+              onClick={handleAvatarClick}
+            >
+              <Icon name="Camera" size={16} />
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-card border-2 border-border"
-            onClick={handleEditClick}
-          >
-            <Icon name="Camera" size={16} />
-          </Button>
-        </div>
 
         {/* Profile Info */}
         <div className="flex-1 text-center lg:text-left">
@@ -80,8 +89,16 @@ const ProfileHeader = ({ user, onEditProfile }) => {
           <Icon name="Edit" size={16} className="mr-2" />
           Edit Profile
         </Button>
+        </div>
       </div>
-    </div>
+
+      {/* Avatar Upload Modal */}
+      <AvatarUploadModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        currentAvatar={user.avatar}
+      />
+    </>
   );
 };
 

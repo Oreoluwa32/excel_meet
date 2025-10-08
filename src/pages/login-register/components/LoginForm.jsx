@@ -33,14 +33,17 @@ const LoginForm = () => {
     setError('');
 
     try {
+      console.log('Attempting to sign in with:', formData.email);
       const result = await signIn(formData.email, formData.password);
+      console.log('Sign in result:', result);
       
       if (result?.success) {
-        navigate('/');
+        navigate('/home-dashboard');
       } else {
         setError(result?.error || 'Login failed. Please try again.');
       }
     } catch (error) {
+      console.error('Sign in error:', error);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -114,11 +117,8 @@ const LoginForm = () => {
       <div className="text-center">
         <button
           type="button"
-          className="text-sm text-blue-600 hover:text-blue-800"
-          onClick={() => {
-            // Handle forgot password
-            console.log('Forgot password clicked');
-          }}
+          className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          onClick={() => navigate('/forgot-password')}
         >
           Forgot your password?
         </button>

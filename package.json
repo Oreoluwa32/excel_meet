@@ -30,7 +30,8 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-elevation": "^2.0.0",
-    "tailwindcss-fluid-type": "^2.0.7"
+    "tailwindcss-fluid-type": "^2.0.7",
+    "web-vitals": "^5.1.0"
   },
   "scripts": {
     "start": "vite",
@@ -71,6 +72,7 @@
     "@vitejs/plugin-react": "4.3.4",
     "autoprefixer": "10.4.2",
     "postcss": "8.4.8",
+    "supabase": "^2.48.3",
     "tailwindcss": "3.4.6",
     "vite": "5.0.0",
     "vite-tsconfig-paths": "3.6.0"

@@ -107,8 +107,22 @@ VITE_OPENAI_API_KEY=your-openai-key
    In Supabase Dashboard:
    - Go to Authentication > Settings
    - Enable Email/Password provider
-   - Configure email templates
+   - Configure email templates (see below)
    - Set up redirect URLs
+
+   **Email Templates Configuration:**
+   - Go to Authentication > Email Templates
+   - Configure "Reset Password" template:
+     - Confirm URL: `{{ .SiteURL }}/reset-password`
+     - Customize email content as needed
+   - Configure "Confirm Signup" template if needed
+   
+   **OAuth Providers (Optional):**
+   - Go to Authentication > Providers
+   - Enable Google provider:
+     - Add Google Client ID and Client Secret
+     - Authorized redirect URI: `https://your-project.supabase.co/auth/v1/callback`
+   - Configure authorized JavaScript origins in Google Cloud Console
 
 3. **Set Up Storage**
 

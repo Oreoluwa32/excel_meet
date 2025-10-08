@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import AuthTabs from './components/AuthTabs';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -9,15 +10,15 @@ import AppLogo from './components/AppLogo';
 
 const LoginRegister = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (isAuthenticated === 'true') {
+    // Redirect if user is already authenticated
+    if (!loading && user) {
       navigate('/home-dashboard');
     }
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);

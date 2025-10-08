@@ -21,8 +21,8 @@ const JobDetails = () => {
     title: "Professional Kitchen Renovation - Complete Remodel",
     category: "Home Improvement",
     postedDate: "2 days ago",
-    location: "Downtown Seattle, WA",
-    coordinates: { lat: 47.6062, lng: -122.3321 },
+    location: "Victoria Island, Lagos",
+    coordinates: { lat: 6.4281, lng: 3.4219 },
     timePeriod: "2-3 weeks starting January 15, 2025",
     isUrgent: true,
     description: `We're looking for an experienced contractor to completely renovate our kitchen. This is a full-scale remodel that includes:\n\n• Demolition of existing cabinets and countertops\n• Installation of new custom cabinets\n• Granite countertop installation\n• Plumbing work for new sink and dishwasher\n• Electrical work for updated lighting and outlets\n• Flooring installation (hardwood)\n• Painting and finishing work\n\nWe have all materials ready and permits in place. Looking for someone who can start immediately and complete the project within 3 weeks. Quality workmanship is essential as this is our forever home.`,
@@ -39,7 +39,7 @@ const JobDetails = () => {
       "https://images.unsplash.com/photo-1556909045-f7c5c2b4b2b0?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop"
     ],
-    budget: "$15,000 - $25,000",
+    budget: "₦6,000,000 - ₦10,000,000",
     isPremium: true
   };
 
@@ -94,7 +94,7 @@ const JobDetails = () => {
       id: 2,
       title: "Bathroom Tile Installation",
       category: "Home Improvement",
-      location: "Capitol Hill, Seattle",
+      location: "Lekki Phase 1, Lagos",
       postedDate: "1 day ago",
       isUrgent: false
     },
@@ -102,7 +102,7 @@ const JobDetails = () => {
       id: 3,
       title: "Deck Repair and Staining",
       category: "Outdoor Work",
-      location: "Ballard, Seattle",
+      location: "Ikeja GRA, Lagos",
       postedDate: "3 days ago",
       isUrgent: true
     },
@@ -110,7 +110,7 @@ const JobDetails = () => {
       id: 4,
       title: "Interior Painting - 3 Bedrooms",
       category: "Painting",
-      location: "Queen Anne, Seattle",
+      location: "Ikoyi, Lagos",
       postedDate: "5 days ago",
       isUrgent: false
     }
