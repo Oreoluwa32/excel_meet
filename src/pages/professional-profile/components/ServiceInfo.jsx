@@ -25,11 +25,11 @@ const ServiceInfo = ({ professional }) => {
         {/* Pricing */}
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Hourly Rate
+            Service Rate
           </h3>
           <div className="text-2xl font-bold text-foreground">
-            ${professional.hourlyRate.min} - ${professional.hourlyRate.max}
-            <span className="text-sm font-normal text-muted-foreground ml-1">/hour</span>
+            ₦{professional.hourlyRate.min.toLocaleString()} - ₦{professional.hourlyRate.max.toLocaleString()}
+            <span className="text-sm font-normal text-muted-foreground ml-1">/job</span>
           </div>
         </div>
 

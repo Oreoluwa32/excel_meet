@@ -82,6 +82,24 @@ const ProfileHeader = ({ professional }) => {
                 {professional.isAvailable ? 'Available' : 'Busy'}
               </span>
             </div>
+
+            {/* Job Statistics */}
+            <div className="flex items-center space-x-6 pt-4 border-t border-border mt-4">
+              <div className="flex items-center space-x-2">
+                <Icon name="Briefcase" size={16} className="text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Jobs Posted</p>
+                  <p className="text-sm font-semibold text-foreground">{professional.jobsPosted || 0}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Icon name="CheckCircle" size={16} className="text-success" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Completed</p>
+                  <p className="text-sm font-semibold text-foreground">{professional.completedJobs || 0}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

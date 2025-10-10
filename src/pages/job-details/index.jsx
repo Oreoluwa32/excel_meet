@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DetailViewModal from '../../components/ui/DetailViewModal';
 import JobHeader from './components/JobHeader';
 import JobDescription from './components/JobDescription';
@@ -9,85 +9,177 @@ import PosterInfo from './components/PosterInfo';
 import JobActions from './components/JobActions';
 import ReviewsSection from './components/ReviewsSection';
 import RelatedJobs from './components/RelatedJobs';
+import CreateJobModal from '../home-dashboard/components/CreateJobModal';
+import { fetchJobById, saveJob, unsaveJob, isJobSaved, updateJob } from '../../utils/jobService';
+import { fetchUserProfileWithStats } from '../../utils/userService';
+import { fetchUserReviews } from '../../utils/reviewService';
+import { submitApplication, checkUserApplication } from '../../utils/applicationService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const JobDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [isSaved, setIsSaved] = useState(false);
-  const [userType] = useState('professional'); // 'professional' or 'poster'
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [jobData, setJobData] = useState(null);
+  const [userType, setUserType] = useState('professional'); // 'professional' or 'poster'
+  const [posterData, setPosterData] = useState(null);
+  const [reviewsData, setReviewsData] = useState([]);
+  const [loadingPoster, setLoadingPoster] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [applicationData, setApplicationData] = useState(null);
+  const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
 
-  // Mock job data
-  const jobData = {
-    id: 1,
-    title: "Professional Kitchen Renovation - Complete Remodel",
-    category: "Home Improvement",
-    postedDate: "2 days ago",
-    location: "Victoria Island, Lagos",
-    coordinates: { lat: 6.4281, lng: 3.4219 },
-    timePeriod: "2-3 weeks starting January 15, 2025",
-    isUrgent: true,
-    description: `We're looking for an experienced contractor to completely renovate our kitchen. This is a full-scale remodel that includes:\n\n• Demolition of existing cabinets and countertops\n• Installation of new custom cabinets\n• Granite countertop installation\n• Plumbing work for new sink and dishwasher\n• Electrical work for updated lighting and outlets\n• Flooring installation (hardwood)\n• Painting and finishing work\n\nWe have all materials ready and permits in place. Looking for someone who can start immediately and complete the project within 3 weeks. Quality workmanship is essential as this is our forever home.`,
-    requirements: [
-      "Minimum 5 years experience in kitchen renovations",
-      "Licensed and insured contractor",
-      "References from recent similar projects",
-      "Ability to work with custom cabinetry",
-      "Knowledge of plumbing and electrical work",
-      "Available to start within 1 week"
-    ],
-    images: [
-      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1556909045-f7c5c2b4b2b0?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop"
-    ],
-    budget: "₦6,000,000 - ₦10,000,000",
-    isPremium: true
-  };
+  // Get jobId from navigation state
+  const jobId = location.state?.jobId;
 
-  const posterData = {
-    id: 1,
-    name: "Sarah Johnson",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-    rating: 4.8,
-    jobsPosted: 12,
-    memberSince: "March 2022",
-    isVerified: true
-  };
+  // Fetch job data on mount
+  useEffect(() => {
+    const loadJobData = async () => {
+      if (!jobId) {
+        setError('No job ID provided');
+        setLoading(false);
+        return;
+      }
 
-  const reviewsData = [
-    {
-      id: 1,
-      reviewer: {
-        name: "Mike Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-      },
-      rating: 5,
-      comment: "Sarah was fantastic to work with. Clear communication, fair pricing, and the bathroom renovation turned out exactly as we envisioned. Highly recommend!",
-      date: "2 weeks ago",
-      serviceDate: "December 15, 2024"
-    },
-    {
-      id: 2,
-      reviewer: {
-        name: "Jennifer Chen",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-      },
-      rating: 5,
-      comment: "Professional, punctual, and delivered exceptional results. The deck repair was completed ahead of schedule and within budget.",
-      date: "1 month ago",
-      serviceDate: "November 28, 2024"
-    },
-    {
-      id: 3,
-      reviewer: {
-        name: "David Thompson",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-      },
-      rating: 4,
-      comment: "Good work overall. The painting job was done well, though it took a bit longer than expected. Would work with Sarah again.",
-      date: "2 months ago",
-      serviceDate: "October 10, 2024"
-    }
-  ];
+      try {
+        setLoading(true);
+        const { data, error: fetchError } = await fetchJobById(jobId);
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
+        if (!data) {
+          throw new Error('Job not found');
+        }
+
+        // Check if current user is the job poster
+        if (user && data.user_id === user.id) {
+          setUserType('poster');
+        }
+
+        setJobData(data);
+        setError(null);
+
+        // Check if job is saved by current user
+        if (user && data.user_id !== user.id) {
+          const { isSaved: savedStatus } = await isJobSaved(user.id, jobId);
+          setIsSaved(savedStatus);
+        }
+      } catch (err) {
+        console.error('Error loading job details:', err);
+        setError(err.message || 'Failed to load job details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadJobData();
+  }, [jobId, user]);
+
+  // Fetch poster profile data
+  useEffect(() => {
+    const loadPosterData = async () => {
+      if (!jobData?.user_id) return;
+
+      try {
+        setLoadingPoster(true);
+        const { data, error: fetchError } = await fetchUserProfileWithStats(jobData.user_id);
+
+        if (fetchError) {
+          console.error('Error fetching poster profile:', fetchError);
+          return;
+        }
+
+        if (data) {
+          // Transform to expected format
+          const memberSince = data.created_at 
+            ? new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            : 'Recently';
+
+          setPosterData({
+            id: data.id,
+            name: data.full_name || 'Anonymous User',
+            avatar: data.avatar_url,
+            rating: data.averageRating || 0,
+            jobsPosted: data.jobsPosted || 0,
+            memberSince: memberSince,
+            isVerified: data.verification_status === 'verified'
+          });
+        }
+      } catch (err) {
+        console.error('Error loading poster data:', err);
+      } finally {
+        setLoadingPoster(false);
+      }
+    };
+
+    loadPosterData();
+  }, [jobData?.user_id]);
+
+  // Fetch reviews for the poster
+  useEffect(() => {
+    const loadReviews = async () => {
+      if (!jobData?.user_id) return;
+
+      try {
+        setLoadingReviews(true);
+        const { data, error: fetchError } = await fetchUserReviews(jobData.user_id);
+
+        if (fetchError) {
+          console.error('Error fetching reviews:', fetchError);
+          return;
+        }
+
+        if (data) {
+          // Transform to expected format
+          const transformedReviews = data.map(review => ({
+            id: review.id,
+            reviewer: {
+              name: review.reviewer?.full_name || 'Anonymous',
+              avatar: review.reviewer?.avatar_url
+            },
+            rating: review.rating,
+            comment: review.comment,
+            date: formatTimeAgo(review.created_at),
+            serviceDate: review.service_date 
+              ? new Date(review.service_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+              : null
+          }));
+
+          setReviewsData(transformedReviews);
+        }
+      } catch (err) {
+        console.error('Error loading reviews:', err);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    loadReviews();
+  }, [jobData?.user_id]);
+
+  // Check if user has already applied to this job
+  useEffect(() => {
+    const checkApplication = async () => {
+      if (!user || !jobId || userType === 'poster') return;
+
+      try {
+        const { hasApplied: applied, application } = await checkUserApplication(user.id, jobId);
+        setHasApplied(applied);
+        setApplicationData(application);
+      } catch (err) {
+        console.error('Error checking application status:', err);
+      }
+    };
+
+    checkApplication();
+  }, [user, jobId, userType]);
 
   const relatedJobsData = [
     {
@@ -129,13 +221,85 @@ const JobDetails = () => {
     }
   };
 
-  const handleSave = () => {
-    setIsSaved(!isSaved);
+  const handleSave = async () => {
+    if (!user) {
+      if (window.confirm('Please login to save jobs. Go to login page?')) {
+        navigate('/login-register');
+      }
+      return;
+    }
+
+    if (!jobData) return;
+
+    try {
+      if (isSaved) {
+        // Unsave the job
+        const { error } = await unsaveJob(user.id, jobData.id);
+        if (error) {
+          throw error;
+        }
+        setIsSaved(false);
+        alert('Job removed from saved jobs');
+      } else {
+        // Save the job
+        const { error } = await saveJob(user.id, jobData.id);
+        if (error) {
+          throw error;
+        }
+        setIsSaved(true);
+        
+        // Show success message with option to view saved jobs
+        if (window.confirm('Job saved successfully! Would you like to view all your saved jobs?')) {
+          navigate('/saved-jobs');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      
+      // Check if it's a duplicate error
+      if (error.message && error.message.includes('duplicate')) {
+        alert('This job is already saved');
+        setIsSaved(true);
+      } else {
+        alert('Failed to save job. Please try again.');
+      }
+    }
   };
 
-  const handleAcceptJob = (proposal) => {
-    console.log('Job accepted with proposal:', proposal);
-    alert('Your proposal has been submitted successfully!');
+  const handleAcceptJob = async (proposal) => {
+    if (!user) {
+      if (window.confirm('Please login to apply for jobs. Go to login page?')) {
+        navigate('/login-register');
+      }
+      return;
+    }
+
+    if (!jobData) return;
+
+    try {
+      setIsSubmittingApplication(true);
+      const { data, error } = await submitApplication(jobData.id, user.id, proposal);
+
+      if (error) {
+        // Check if it's a duplicate application error
+        if (error.message && error.message.includes('duplicate')) {
+          alert('You have already applied to this job.');
+          setHasApplied(true);
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      setHasApplied(true);
+      setApplicationData(data);
+      alert('Your proposal has been submitted successfully!');
+    } catch (err) {
+      console.error('Error submitting application:', err);
+      alert('Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmittingApplication(false);
+    }
   };
 
   const handleAskQuestion = () => {
@@ -144,14 +308,160 @@ const JobDetails = () => {
   };
 
   const handleEditJob = () => {
-    console.log('Edit job clicked');
-    alert('Edit job functionality will be available soon!');
+    setIsEditModalOpen(true);
+  };
+
+  const handleJobUpdate = async (updatedJobData) => {
+    try {
+      // Prepare job data for database (similar to create)
+      const jobRecord = {
+        title: updatedJobData.title,
+        category: updatedJobData.category,
+        description: updatedJobData.description,
+        budget_min: parseFloat(updatedJobData.budget_min),
+        budget_max: updatedJobData.budget_max ? parseFloat(updatedJobData.budget_max) : null,
+        budget_type: updatedJobData.budget_type,
+        urgency: updatedJobData.urgency,
+        state: updatedJobData.state,
+        city: updatedJobData.city,
+        address: updatedJobData.address || null,
+        start_date: updatedJobData.start_date,
+        duration: updatedJobData.duration ? parseInt(updatedJobData.duration) : null,
+        duration_unit: updatedJobData.duration_unit,
+        skills_required: updatedJobData.skills_required,
+        requirements: updatedJobData.requirements || null,
+      };
+
+      const { data, error: updateError } = await updateJob(jobData.id, jobRecord);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Refresh job data
+      const { data: refreshedData, error: fetchError } = await fetchJobById(jobId);
+      if (!fetchError && refreshedData) {
+        setJobData(refreshedData);
+      }
+
+      setIsEditModalOpen(false);
+      alert('Job updated successfully!');
+    } catch (err) {
+      console.error('Error updating job:', err);
+      alert('Failed to update job. Please try again.');
+    }
   };
 
   const handleViewApplications = () => {
-    console.log('View applications clicked');
-    alert('Applications view will be available soon!');
+    // Navigate to applications page with job ID
+    navigate('/job-applications', { state: { jobId: jobData.id, jobTitle: jobData.title } });
   };
+
+  // Helper function to format time period
+  const formatTimePeriod = (startDate, duration, durationUnit) => {
+    if (!startDate) return 'Flexible';
+    
+    const start = new Date(startDate);
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = start.toLocaleDateString('en-US', options);
+    
+    if (duration && durationUnit) {
+      return `${duration} ${durationUnit}${duration > 1 ? 's' : ''} starting ${formattedDate}`;
+    }
+    
+    return `Starting ${formattedDate}`;
+  };
+
+  // Helper function to format budget
+  const formatBudget = (min, max) => {
+    if (!min) return 'Negotiable';
+    
+    const formatNumber = (num) => {
+      return new Intl.NumberFormat('en-NG').format(num);
+    };
+
+    if (max && max !== min) {
+      return `₦${formatNumber(min)} - ₦${formatNumber(max)}`;
+    }
+    
+    return `₦${formatNumber(min)}`;
+  };
+
+  // Helper function to format time ago
+  const formatTimeAgo = (date) => {
+    const now = new Date();
+    const posted = new Date(date);
+    const diffInHours = Math.floor((now - posted) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+  };
+
+  // Transform database job data to component format
+  const transformedJobData = jobData ? {
+    id: jobData.id,
+    title: jobData.title,
+    category: jobData.category,
+    postedDate: formatTimeAgo(jobData.created_at),
+    location: `${jobData.city}, ${jobData.state}`,
+    coordinates: jobData.latitude && jobData.longitude 
+      ? { lat: jobData.latitude, lng: jobData.longitude }
+      : null,
+    timePeriod: formatTimePeriod(jobData.start_date, jobData.duration, jobData.duration_unit),
+    isUrgent: jobData.urgency === 'urgent',
+    description: jobData.description,
+    requirements: jobData.requirements || [],
+    images: jobData.images || [],
+    budget: formatBudget(jobData.budget_min, jobData.budget_max),
+    isPremium: false // Can be determined based on user subscription
+  } : null;
+
+  // Loading state
+  if (loading) {
+    return (
+      <DetailViewModal isOpen={true} title="Job Details">
+        <div className="bg-background min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading job details...</p>
+          </div>
+        </div>
+      </DetailViewModal>
+    );
+  }
+
+  // Error state
+  if (error || !transformedJobData) {
+    return (
+      <DetailViewModal isOpen={true} title="Job Details">
+        <div className="bg-background min-h-screen flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Error Loading Job</h3>
+            <p className="text-muted-foreground mb-4">
+              {error || 'Job not found'}
+            </p>
+            <button
+              onClick={() => navigate('/home-dashboard')}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </DetailViewModal>
+    );
+  }
 
   return (
     <DetailViewModal isOpen={true} title="Job Details">
@@ -160,27 +470,31 @@ const JobDetails = () => {
           {/* Main Content */}
           <div className="flex-1">
             <JobHeader
-              job={jobData}
+              job={transformedJobData}
               onShare={handleShare}
               onSave={handleSave}
               isSaved={isSaved}
             />
 
             <JobDescription
-              description={jobData.description}
-              requirements={jobData.requirements}
+              description={transformedJobData.description}
+              requirements={transformedJobData.requirements}
             />
 
-            <JobLocation
-              location={jobData.location}
-              coordinates={jobData.coordinates}
-            />
+            {transformedJobData.coordinates && (
+              <JobLocation
+                location={transformedJobData.location}
+                coordinates={transformedJobData.coordinates}
+              />
+            )}
 
-            <JobGallery images={jobData.images} />
+            {transformedJobData.images && transformedJobData.images.length > 0 && (
+              <JobGallery images={transformedJobData.images} />
+            )}
 
-            <PosterInfo poster={posterData} />
+            <PosterInfo poster={posterData} loading={loadingPoster} />
 
-            <ReviewsSection reviews={reviewsData} />
+            <ReviewsSection reviews={reviewsData} loading={loadingReviews} />
 
             <JobActions
               userType={userType}
@@ -188,6 +502,9 @@ const JobDetails = () => {
               onAskQuestion={handleAskQuestion}
               onEditJob={handleEditJob}
               onViewApplications={handleViewApplications}
+              hasApplied={hasApplied}
+              applicationStatus={applicationData?.status}
+              isSubmitting={isSubmittingApplication}
             />
           </div>
 
@@ -198,6 +515,17 @@ const JobDetails = () => {
             </div>
           </div>
         </div>
+
+        {/* Edit Job Modal */}
+        {isEditModalOpen && jobData && (
+          <CreateJobModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSubmit={handleJobUpdate}
+            editMode={true}
+            initialData={jobData}
+          />
+        )}
       </div>
     </DetailViewModal>
   );

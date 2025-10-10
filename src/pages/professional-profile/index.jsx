@@ -8,119 +8,132 @@ import AboutSection from './components/AboutSection';
 import PortfolioSection from './components/PortfolioSection';
 import ReviewsSection from './components/ReviewsSection';
 import ContactSection from './components/ContactSection';
+import JobHistorySection from './components/JobHistorySection';
+import { 
+  fetchUserProfileWithStats, 
+  fetchUserJobStats,
+  fetchUserPostedJobs,
+  fetchProfessionalActiveJobs,
+  fetchProfessionalCompletedJobs
+} from '../../utils/userService';
+import { fetchUserReviews } from '../../utils/reviewService';
 
 const ProfessionalProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-
-  // Mock professional data
-  const professionalData = {
-    id: "prof_001",
-    name: "Sarah Johnson",
-    title: "Licensed Electrician & Home Automation Specialist",
-    location: "San Francisco, CA",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face",
-    isVerified: true,
-    isPremium: true,
-    rating: 4.8,
-    reviewCount: 127,
-    isAvailable: true,
-    experience: 8,
-    responseTime: "Within 2 hours",
-    phone: "+1 (555) 123-4567",
-    completedJobs: 245,
-    memberSince: "2019",
-    hourlyRate: {
-      min: 75,
-      max: 120
-    },
-    serviceCategories: [
-      "Electrical Installation",
-      "Home Automation",
-      "Smart Home Setup",
-      "Electrical Repairs",
-      "Panel Upgrades"
-    ],
-    skills: [
-      { name: "Electrical Wiring", level: "Expert" },
-      { name: "Smart Home Systems", level: "Advanced" },
-      { name: "Solar Installation", level: "Intermediate" },
-      { name: "Home Automation", level: "Expert" },
-      { name: "Troubleshooting", level: "Expert" }
-    ],
-    about: `I'm a licensed electrician with over 8 years of experience specializing in residential electrical work and smart home automation. I hold certifications in electrical safety, smart home technology, and solar panel installation.
-
-My passion lies in helping homeowners modernize their electrical systems while ensuring safety and efficiency. I've successfully completed over 245 projects, ranging from simple outlet installations to complete home automation systems.
-
-I pride myself on clear communication, punctuality, and delivering high-quality work that exceeds expectations. Every project comes with a satisfaction guarantee and follow-up support.
-
-When I'm not working, I enjoy staying updated with the latest smart home technologies and volunteering with local community electrical safety programs.`,
-    portfolio: [
-      {
-        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop",
-        title: "Smart Home Installation",
-        description: "Complete home automation system with voice control"
-      },
-      {
-        image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&h=400&fit=crop",
-        title: "Electrical Panel Upgrade",
-        description: "200-amp panel upgrade with smart breakers"
-      },
-      {
-        image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=400&fit=crop",
-        title: "Outdoor Lighting",
-        description: "Landscape lighting with smart controls"
-      },
-      {
-        image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop",
-        title: "Kitchen Renovation",
-        description: "Complete electrical rewiring for modern kitchen"
-      }
-    ],
-    socialLinks: [
-      { platform: "Linkedin", url: "https://linkedin.com/in/sarahjohnson" },
-      { platform: "Instagram", url: "https://instagram.com/sarahelectrician" },
-      { platform: "Facebook", url: "https://facebook.com/sarahjohnsonelectrical" }
-    ],
-    reviews: [
-      {
-        reviewerName: "Michael Chen",
-        reviewerAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-        rating: 5,
-        date: "2024-06-15",
-        serviceType: "Smart Home Installation",
-        comment: "Sarah did an amazing job installing our smart home system. She was professional, knowledgeable, and explained everything clearly. The work was completed on time and within budget. Highly recommend!",
-        professionalResponse: "Thank you Michael! It was a pleasure working on your smart home project. I'm glad you're enjoying the new automation features. Don't hesitate to reach out if you need any adjustments!"
-      },
-      {
-        reviewerName: "Jennifer Martinez",reviewerAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",rating: 5,date: "2024-06-08",serviceType: "Electrical Panel Upgrade",comment: "Excellent work on our panel upgrade. Sarah was punctual, clean, and very thorough. She took the time to explain the new safety features and answered all our questions. Will definitely hire again.",professionalResponse: "Thanks Jennifer! Safety is always my top priority, and I'm happy you feel more secure with your new panel. The smart breakers will give you great control over your home's electrical system."
-      },
-      {
-        reviewerName: "David Thompson",reviewerAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",rating: 4,date: "2024-05-28",serviceType: "Electrical Repairs",comment: "Sarah quickly diagnosed and fixed our electrical issues. She was very professional and the pricing was fair. Only minor complaint was that she arrived about 15 minutes late, but she called ahead to let us know.",professionalResponse: "Thank you David! I apologize for the slight delay - traffic was heavier than expected. I always try to call ahead when running late. I\'m glad we got your electrical issues resolved quickly!"
-      },
-      {
-        reviewerName: "Lisa Wang",
-        reviewerAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
-        rating: 5,
-        date: "2024-05-20",
-        serviceType: "Outdoor Lighting",
-        comment: "Beautiful outdoor lighting installation! Sarah helped us design the perfect lighting scheme for our garden and patio. The smart controls make it so convenient. Couldn't be happier with the results.",professionalResponse: "Thank you Lisa! Your garden looks absolutely stunning with the new lighting. I love how the smart scheduling automatically adjusts for the seasons. Enjoy your beautiful outdoor space!"
-      },
-      {
-        reviewerName: "Robert Kim",reviewerAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",rating: 5,date: "2024-05-12",serviceType: "Kitchen Renovation",comment: "Sarah completely rewired our kitchen during renovation. Her attention to detail was impressive, and she coordinated perfectly with our contractor. The new electrical layout is exactly what we needed for our modern appliances."
-      }
-    ]
-  };
+  const [professionalData, setProfessionalData] = useState(null);
+  const [error, setError] = useState(null);
+  
+  // Get userId from navigation state
+  const userId = location.state?.userId;
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    const fetchProfileData = async () => {
+      if (!userId) {
+        setError('No user ID provided');
+        setIsLoading(false);
+        return;
+      }
 
-    return () => clearTimeout(timer);
-  }, []);
+      try {
+        setIsLoading(true);
+        
+        // Fetch user profile with stats
+        const profileResponse = await fetchUserProfileWithStats(userId);
+        
+        if (!profileResponse.success) {
+          throw new Error(profileResponse.error || 'Failed to fetch profile');
+        }
+
+        const profile = profileResponse.data;
+        
+        // Fetch user reviews
+        const reviewsResponse = await fetchUserReviews(userId);
+        const reviews = reviewsResponse.success ? reviewsResponse.data : [];
+
+        // Fetch job statistics
+        const jobStatsResponse = await fetchUserJobStats(userId);
+        const jobStats = jobStatsResponse.data || {};
+
+        // Fetch job history
+        const postedJobsResponse = await fetchUserPostedJobs(userId);
+        const activeJobsResponse = await fetchProfessionalActiveJobs(userId);
+        const completedJobsResponse = await fetchProfessionalCompletedJobs(userId);
+
+        // Parse portfolio from JSONB
+        let portfolioItems = [];
+        if (profile.portfolio) {
+          try {
+            portfolioItems = typeof profile.portfolio === 'string' 
+              ? JSON.parse(profile.portfolio) 
+              : profile.portfolio;
+          } catch (e) {
+            console.error('Error parsing portfolio:', e);
+            portfolioItems = [];
+          }
+        }
+
+        // Transform data to match component expectations
+        const transformedData = {
+          id: profile.id,
+          name: profile.full_name || 'Unknown User',
+          title: profile.professional_title || profile.bio || 'Professional',
+          location: [profile.city, profile.state, profile.country].filter(Boolean).join(', ') || 'Location not specified',
+          avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'User')}&size=400`,
+          isVerified: profile.verification_status === 'verified',
+          isPremium: profile.subscription_tier === 'premium' || profile.subscription_tier === 'pro',
+          rating: profile.averageRating || 0,
+          reviewCount: reviews.length,
+          isAvailable: profile.availability_status === 'available',
+          experience: profile.years_of_experience || 0,
+          responseTime: profile.response_time || 'Not specified',
+          phone: profile.phone_number || 'Not provided',
+          completedJobs: jobStats.completedJobsAsProfessional || 0,
+          jobsPosted: jobStats.jobsPosted || 0,
+          memberSince: profile.created_at ? new Date(profile.created_at).getFullYear().toString() : 'Recently',
+          hourlyRate: {
+            min: profile.hourly_rate_min || 0,
+            max: profile.hourly_rate_max || 0
+          },
+          serviceCategories: profile.service_categories || [],
+          skills: (profile.skills || []).map(skill => ({
+            name: typeof skill === 'string' ? skill : skill.name,
+            level: typeof skill === 'object' ? skill.level : 'Intermediate'
+          })),
+          about: profile.bio || 'No bio available',
+          portfolio: portfolioItems,
+          postedJobs: postedJobsResponse.data || [],
+          activeJobs: activeJobsResponse.data || [],
+          completedJobsList: completedJobsResponse.data || [],
+          socialLinks: [
+            profile.linkedin_url && { platform: "Linkedin", url: profile.linkedin_url },
+            profile.instagram_url && { platform: "Instagram", url: profile.instagram_url },
+            profile.facebook_url && { platform: "Facebook", url: profile.facebook_url }
+          ].filter(Boolean),
+          reviews: reviews.map(review => ({
+            reviewerName: review.reviewer_name || 'Anonymous',
+            reviewerAvatar: review.reviewer_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer_name || 'User')}&size=100`,
+            rating: review.rating,
+            date: new Date(review.created_at).toISOString().split('T')[0],
+            serviceType: review.job_title || 'Service',
+            comment: review.comment,
+            professionalResponse: review.professional_response || null
+          }))
+        };
+
+        setProfessionalData(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching professional profile:', err);
+        setError(err.message || 'Failed to load profile');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [userId]);
 
   const handleStartChat = () => {
     console.log('Starting chat with professional:', professionalData.name);
@@ -142,6 +155,28 @@ When I'm not working, I enjoy staying updated with the latest smart home technol
     );
   }
 
+  if (error || !professionalData) {
+    return (
+      <DetailViewModal isOpen={true} onClose={handleClose} title="Error">
+        <div className="flex flex-col items-center justify-center h-64 text-center px-4">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            {error || 'Profile not found'}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            Unable to load the professional profile. Please try again later.
+          </p>
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+          >
+            Go Back
+          </button>
+        </div>
+      </DetailViewModal>
+    );
+  }
+
   return (
     <DetailViewModal 
       isOpen={true} 
@@ -155,14 +190,21 @@ When I'm not working, I enjoy staying updated with the latest smart home technol
         {/* Skills Section */}
         <SkillsSection skills={professionalData.skills} />
         
+        {/* Portfolio Section - Moved up to replace Service Categories */}
+        <PortfolioSection portfolio={professionalData.portfolio} />
+        
         {/* Service Information */}
         <ServiceInfo professional={professionalData} />
         
         {/* About Section */}
         <AboutSection about={professionalData.about} />
         
-        {/* Portfolio Section */}
-        <PortfolioSection portfolio={professionalData.portfolio} />
+        {/* Job History Section */}
+        <JobHistorySection 
+          postedJobs={professionalData.postedJobs}
+          activeJobs={professionalData.activeJobs}
+          completedJobs={professionalData.completedJobsList}
+        />
         
         {/* Reviews Section */}
         <ReviewsSection reviews={professionalData.reviews} />

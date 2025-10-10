@@ -2,11 +2,7 @@ import React from 'react';
 import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 
-const ReviewsSection = ({ reviews }) => {
-  if (!reviews || reviews.length === 0) {
-    return null;
-  }
-
+const ReviewsSection = ({ reviews, loading }) => {
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, index) => (
       <Icon
@@ -17,6 +13,38 @@ const ReviewsSection = ({ reviews }) => {
       />
     ));
   };
+
+  if (loading) {
+    return (
+      <div className="bg-card border-b border-border p-4 lg:p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Reviews</h3>
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex items-start space-x-3">
+              <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
+                <div className="h-3 bg-muted rounded animate-pulse w-24"></div>
+                <div className="h-12 bg-muted rounded animate-pulse w-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!reviews || reviews.length === 0) {
+    return (
+      <div className="bg-card border-b border-border p-4 lg:p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Reviews</h3>
+        <div className="text-center py-8">
+          <Icon name="MessageSquare" size={48} className="text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-muted-foreground">No reviews yet</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border-b border-border p-4 lg:p-6">
@@ -53,9 +81,11 @@ const ReviewsSection = ({ reviews }) => {
                   {review.comment}
                 </p>
                 
-                <div className="text-xs text-muted-foreground">
-                  Service completed on {review.serviceDate}
-                </div>
+                {review.serviceDate && (
+                  <div className="text-xs text-muted-foreground">
+                    Service completed on {review.serviceDate}
+                  </div>
+                )}
               </div>
             </div>
           </div>

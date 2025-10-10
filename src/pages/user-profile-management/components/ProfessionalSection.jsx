@@ -4,30 +4,53 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import Image from '../../../components/AppImage';
+import { uploadPortfolioImage } from '../../../utils/userService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const ProfessionalSection = ({ user, onSave }) => {
+  const { user: authUser } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [isEditingPortfolio, setIsEditingPortfolio] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [skills, setSkills] = useState(user.skills || []);
   const [portfolio, setPortfolio] = useState(user.portfolio || []);
+  const [selectedCategory, setSelectedCategory] = useState(user.primaryCategory || '');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [newPortfolioItem, setNewPortfolioItem] = useState({
     title: '',
     description: '',
     image: '',
+    imageFile: null,
     category: ''
   });
 
   const skillCategories = [
-    { value: 'plumbing', label: 'Plumbing' },
-    { value: 'electrical', label: 'Electrical' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'repairs', label: 'Repairs' },
-    { value: 'consulting', label: 'Consulting' },
-    { value: 'carpentry', label: 'Carpentry' },
-    { value: 'painting', label: 'Painting' },
-    { value: 'landscaping', label: 'Landscaping' }
+    { value: 'information-technology', label: 'Information Technology' },
+    { value: 'engineering', label: 'Engineering' },
+    { value: 'healthcare', label: 'Healthcare' },
+    { value: 'education', label: 'Education' },
+    { value: 'finance-accounting', label: 'Finance and Accounting' },
+    { value: 'marketing-advertising', label: 'Marketing and Advertising' },
+    { value: 'sales-business-development', label: 'Sales and Business Development' },
+    { value: 'human-resources', label: 'Human Resources' },
+    { value: 'customer-service', label: 'Customer Service' },
+    { value: 'administration-office-support', label: 'Administration and Office Support' },
+    { value: 'legal', label: 'Legal' },
+    { value: 'manufacturing-production', label: 'Manufacturing and Production' },
+    { value: 'construction-skilled-trades', label: 'Construction and Skilled Trades' },
+    { value: 'logistics-supply-chain', label: 'Logistics and Supply Chain' },
+    { value: 'hospitality-tourism', label: 'Hospitality and Tourism' },
+    { value: 'creative-arts-design', label: 'Creative Arts and Design' },
+    { value: 'media-communications', label: 'Media and Communications' },
+    { value: 'science-research', label: 'Science and Research' },
+    { value: 'agriculture-farming', label: 'Agriculture and Farming' },
+    { value: 'public-sector-government', label: 'Public Sector and Government' },
+    { value: 'nonprofit-community-services', label: 'Nonprofit and Community Services' },
+    { value: 'real-estate-property', label: 'Real Estate and Property' },
+    { value: 'retail', label: 'Retail' },
+    { value: 'security-law-enforcement', label: 'Security and Law Enforcement' },
+    { value: 'transportation-driving', label: 'Transportation and Driving' }
   ];
 
   const handleAddSkill = () => {
@@ -45,17 +68,79 @@ const ProfessionalSection = ({ user, onSave }) => {
     onSave('skills', updatedSkills);
   };
 
-  const handleAddPortfolioItem = () => {
+  const handleAddPortfolioItem = async () => {
     if (newPortfolioItem.title.trim()) {
-      const updatedPortfolio = [...portfolio, {
-        ...newPortfolioItem,
-        id: Date.now(),
-        image: newPortfolioItem.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'
-      }];
-      setPortfolio(updatedPortfolio);
-      setNewPortfolioItem({ title: '', description: '', image: '', category: '' });
-      onSave('portfolio', updatedPortfolio);
+      setUploadingImage(true);
+      try {
+        let imageUrl = newPortfolioItem.image;
+        
+        // Upload image if file is selected
+        if (newPortfolioItem.imageFile) {
+          const { url, error } = await uploadPortfolioImage(newPortfolioItem.imageFile, authUser.id);
+          if (error) {
+            alert('Failed to upload image. Please try again.');
+            setUploadingImage(false);
+            return;
+          }
+          imageUrl = url;
+        }
+        
+        const updatedPortfolio = [...portfolio, {
+          ...newPortfolioItem,
+          id: Date.now(),
+          image: imageUrl || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'
+        }];
+        setPortfolio(updatedPortfolio);
+        setNewPortfolioItem({ title: '', description: '', image: '', imageFile: null, category: '' });
+        onSave('portfolio', updatedPortfolio);
+      } catch (error) {
+        console.error('Error adding portfolio item:', error);
+        alert('Failed to add portfolio item. Please try again.');
+      } finally {
+        setUploadingImage(false);
+      }
     }
+  };
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+      setNewPortfolioItem(prev => ({
+        ...prev,
+        imageFile: file,
+        image: URL.createObjectURL(file)
+      }));
+    }
+  };
+
+  const handleSaveCategory = () => {
+    if (selectedCategory) {
+      const currentCategories = user.serviceCategories || [];
+      if (currentCategories.includes(selectedCategory)) {
+        alert('This category is already added!');
+        return;
+      }
+      const updatedCategories = [...currentCategories, selectedCategory];
+      onSave('service_categories', updatedCategories);
+      setSelectedCategory(''); // Reset selection after adding
+      alert('Service category added successfully!');
+    }
+  };
+
+  const handleRemoveCategory = (categoryToRemove) => {
+    const currentCategories = user.serviceCategories || [];
+    const updatedCategories = currentCategories.filter(cat => cat !== categoryToRemove);
+    onSave('service_categories', updatedCategories);
   };
 
   const handleRemovePortfolioItem = (itemId) => {
@@ -63,10 +148,6 @@ const ProfessionalSection = ({ user, onSave }) => {
     setPortfolio(updatedPortfolio);
     onSave('portfolio', updatedPortfolio);
   };
-
-  if (!user.isProfessional) {
-    return null;
-  }
 
   return (
     <div className="bg-card border border-border rounded-lg">
@@ -139,12 +220,47 @@ const ProfessionalSection = ({ user, onSave }) => {
             {/* Service Categories */}
             <div className="space-y-4">
               <h4 className="font-medium text-foreground">Service Categories</h4>
-              <Select
-                label="Primary Category"
-                options={skillCategories}
-                value={user.primaryCategory || ''}
-                onChange={(value) => onSave('primaryCategory', value)}
-              />
+              <p className="text-sm text-muted-foreground">
+                Add multiple service categories to help clients find you more easily.
+              </p>
+              <div className="flex space-x-2">
+                <Select
+                  label="Select Category"
+                  options={skillCategories}
+                  value={selectedCategory}
+                  onChange={(value) => setSelectedCategory(value)}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={handleSaveCategory}
+                  size="sm"
+                  disabled={!selectedCategory}
+                  className="mt-6"
+                >
+                  Add Category
+                </Button>
+              </div>
+              {user.serviceCategories && user.serviceCategories.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm text-muted-foreground mb-2">Your Service Categories:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {user.serviceCategories.map((cat, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                      >
+                        <span>{skillCategories.find(sc => sc.value === cat)?.label || cat}</span>
+                        <button
+                          onClick={() => handleRemoveCategory(cat)}
+                          className="hover:text-error"
+                        >
+                          <Icon name="X" size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Portfolio Management */}
@@ -180,15 +296,32 @@ const ProfessionalSection = ({ user, onSave }) => {
                       description: e.target.value
                     }))}
                   />
-                  <Input
-                    label="Image URL"
-                    type="url"
-                    value={newPortfolioItem.image}
-                    onChange={(e) => setNewPortfolioItem(prev => ({
-                      ...prev,
-                      image: e.target.value
-                    }))}
-                  />
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">
+                      Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      className="block w-full text-sm text-muted-foreground
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-lg file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-primary file:text-primary-foreground
+                        hover:file:bg-primary/90
+                        cursor-pointer"
+                    />
+                    {newPortfolioItem.image && (
+                      <div className="mt-2">
+                        <Image
+                          src={newPortfolioItem.image}
+                          alt="Preview"
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      </div>
+                    )}
+                  </div>
                   <Select
                     label="Category"
                     options={skillCategories}
@@ -198,8 +331,12 @@ const ProfessionalSection = ({ user, onSave }) => {
                       category: value
                     }))}
                   />
-                  <Button onClick={handleAddPortfolioItem} size="sm">
-                    Add to Portfolio
+                  <Button 
+                    onClick={handleAddPortfolioItem} 
+                    size="sm"
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? 'Uploading...' : 'Add to Portfolio'}
                   </Button>
                 </div>
               )}

@@ -10,12 +10,7 @@ const SkillsSection = ({ skills }) => {
             key={index}
             className="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium"
           >
-            {skill.name}
-            {skill.level && (
-              <span className="ml-1 text-xs opacity-75">
-                ({skill.level})
-              </span>
-            )}
+            {typeof skill === 'string' ? skill : skill.name}
           </div>
         ))}
       </div>

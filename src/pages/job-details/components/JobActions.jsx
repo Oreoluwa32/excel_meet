@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 
 import Button from '../../../components/ui/Button';
 
-const JobActions = ({ userType, onAcceptJob, onAskQuestion, onEditJob, onViewApplications }) => {
+const JobActions = ({ 
+  userType, 
+  onAcceptJob, 
+  onAskQuestion, 
+  onEditJob, 
+  onViewApplications,
+  hasApplied = false,
+  applicationStatus = null,
+  isSubmitting = false
+}) => {
   const [showProposal, setShowProposal] = useState(false);
   const [proposal, setProposal] = useState('');
 
@@ -16,6 +25,18 @@ const JobActions = ({ userType, onAcceptJob, onAskQuestion, onEditJob, onViewApp
       setShowProposal(false);
       setProposal('');
     }
+  };
+
+  // Get button text based on application status
+  const getApplicationButtonText = () => {
+    if (hasApplied) {
+      if (applicationStatus === 'pending') return 'Proposal Submitted';
+      if (applicationStatus === 'accepted') return 'Application Accepted';
+      if (applicationStatus === 'rejected') return 'Application Rejected';
+      if (applicationStatus === 'withdrawn') return 'Application Withdrawn';
+      return 'Already Applied';
+    }
+    return 'Accept Job';
   };
 
   if (userType === 'poster') {
@@ -90,13 +111,14 @@ const JobActions = ({ userType, onAcceptJob, onAskQuestion, onEditJob, onViewApp
             Ask Question
           </Button>
           <Button
-            variant="default"
+            variant={hasApplied ? "outline" : "default"}
             onClick={handleAcceptClick}
             className="flex-1"
-            iconName="Check"
+            iconName={hasApplied ? "CheckCircle" : "Check"}
             iconPosition="left"
+            disabled={hasApplied || isSubmitting}
           >
-            Accept Job
+            {isSubmitting ? 'Submitting...' : getApplicationButtonText()}
           </Button>
         </div>
       )}

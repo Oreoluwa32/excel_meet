@@ -9,10 +9,13 @@ import LoginRegister from "pages/login-register";
 import ForgotPassword from "pages/forgot-password";
 import ResetPassword from "pages/reset-password";
 import JobDetails from "pages/job-details";
+import JobApplications from "pages/job-applications";
+import Notifications from "pages/notifications";
 import ProfessionalProfile from "pages/professional-profile";
 import HomeDashboard from "pages/home-dashboard";
 import SearchDiscovery from "pages/search-discovery";
 import UserProfileManagement from "pages/user-profile-management";
+import SavedJobs from "pages/saved-jobs";
 import NotFound from "pages/NotFound";
 
 // Protected Route Component
@@ -87,6 +90,30 @@ const Routes = () => {
           element={
             <ProtectedRoute>
               <UserProfileManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/saved-jobs" 
+          element={
+            <ProtectedRoute>
+              <SavedJobs />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/job-applications" 
+          element={
+            <ProtectedRoute>
+              <JobApplications />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/notifications" 
+          element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           } 
         />

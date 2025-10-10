@@ -16,14 +16,31 @@ const JobCard = ({ job }) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Plumbing': 'bg-blue-100 text-blue-800',
-      'Electrical': 'bg-yellow-100 text-yellow-800',
-      'Cleaning': 'bg-green-100 text-green-800',
-      'Repairs': 'bg-red-100 text-red-800',
-      'Consulting': 'bg-purple-100 text-purple-800',
-      'Landscaping': 'bg-emerald-100 text-emerald-800',
-      'Painting': 'bg-orange-100 text-orange-800',
-      'Moving': 'bg-indigo-100 text-indigo-800'
+      'Information Technology': 'bg-blue-100 text-blue-800',
+      'Engineering': 'bg-indigo-100 text-indigo-800',
+      'Healthcare': 'bg-red-100 text-red-800',
+      'Education': 'bg-green-100 text-green-800',
+      'Finance and Accounting': 'bg-emerald-100 text-emerald-800',
+      'Marketing and Advertising': 'bg-purple-100 text-purple-800',
+      'Sales and Business Development': 'bg-pink-100 text-pink-800',
+      'Human Resources': 'bg-orange-100 text-orange-800',
+      'Customer Service': 'bg-cyan-100 text-cyan-800',
+      'Administration and Office Support': 'bg-slate-100 text-slate-800',
+      'Legal': 'bg-gray-100 text-gray-800',
+      'Manufacturing and Production': 'bg-amber-100 text-amber-800',
+      'Construction and Skilled Trades': 'bg-yellow-100 text-yellow-800',
+      'Logistics and Supply Chain': 'bg-teal-100 text-teal-800',
+      'Hospitality and Tourism': 'bg-rose-100 text-rose-800',
+      'Creative Arts and Design': 'bg-fuchsia-100 text-fuchsia-800',
+      'Media and Communications': 'bg-violet-100 text-violet-800',
+      'Science and Research': 'bg-sky-100 text-sky-800',
+      'Agriculture and Farming': 'bg-lime-100 text-lime-800',
+      'Public Sector and Government': 'bg-stone-100 text-stone-800',
+      'Nonprofit and Community Services': 'bg-green-100 text-green-800',
+      'Real Estate and Property': 'bg-blue-100 text-blue-800',
+      'Retail': 'bg-orange-100 text-orange-800',
+      'Security and Law Enforcement': 'bg-red-100 text-red-800',
+      'Transportation and Driving': 'bg-indigo-100 text-indigo-800'
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };

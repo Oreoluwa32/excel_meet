@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import Button from '../../components/ui/Button';
 import SearchBar from './components/SearchBar';
@@ -13,6 +13,7 @@ import LoadingState from './components/LoadingState';
 
 const SearchDiscovery = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('jobs');
   const [showFilters, setShowFilters] = useState(false);
@@ -301,6 +302,20 @@ const SearchDiscovery = () => {
   return (
     <div className="min-h-screen bg-background pt-16 lg:pt-28 pb-20 lg:pb-8">
       <div className="max-w-7xl mx-auto px-4 lg:px-6">
+        {/* Back Button */}
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            iconName="ArrowLeft"
+            iconPosition="left"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Back
+          </Button>
+        </div>
+
         <div className="lg:flex lg:space-x-6">
           {/* Desktop Filter Sidebar */}
           <div className="hidden lg:block lg:w-80 flex-shrink-0">

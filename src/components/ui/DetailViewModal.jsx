@@ -7,7 +7,7 @@ const DetailViewModal = ({ children, isOpen, onClose, title }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const detailRoutes = ['/job-details', '/professional-profile'];
+  const detailRoutes = ['/job-details', '/professional-profile', '/job-applications'];
   const isDetailRoute = detailRoutes.includes(location.pathname);
 
   useEffect(() => {

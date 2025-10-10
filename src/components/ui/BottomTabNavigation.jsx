@@ -78,7 +78,7 @@ const BottomTabNavigation = () => {
       </nav>
 
       {/* Desktop Top Navigation */}
-      <nav className="hidden lg:block fixed top-16 left-0 right-0 z-40 bg-card border-b border-border">
+      <nav className="hidden lg:block sticky top-16 left-0 right-0 z-40 bg-card border-b border-border">
         <div className="flex items-center justify-center h-12 px-6">
           <div className="flex items-center space-x-8">
             {tabs.map((tab) => {

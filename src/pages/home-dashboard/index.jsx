@@ -8,7 +8,7 @@ import FilterChips from './components/FilterChips';
 import FloatingActionButton from '../../components/ui/FloatingActionButton';
 import CreateJobModal from './components/CreateJobModal';
 import { Plus } from 'lucide-react';
-import { supabase } from '../../utils/supabase';
+import { createJob, uploadJobImages, updateJob } from '../../utils/jobService';
 
 const HomeDashboard = () => {
   const { user, userProfile, loading } = useAuth();
@@ -18,6 +18,7 @@ const HomeDashboard = () => {
     location: ''
   });
   const [isCreateJobModalOpen, setIsCreateJobModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
@@ -27,9 +28,6 @@ const HomeDashboard = () => {
   const handleCreateJob = async (jobData) => {
     try {
       console.log('Creating job with data:', jobData);
-
-      // TODO: Upload images to Supabase Storage
-      // const imageUrls = await uploadJobImages(jobData.images);
 
       // Prepare job data for database
       const jobRecord = {
@@ -45,33 +43,49 @@ const HomeDashboard = () => {
         city: jobData.city,
         address: jobData.address || null,
         start_date: jobData.start_date,
-        duration: jobData.duration || null,
+        duration: jobData.duration ? parseInt(jobData.duration) : null,
         duration_unit: jobData.duration_unit,
         skills_required: jobData.skills_required,
         requirements: jobData.requirements || null,
         status: 'open',
-        // images: imageUrls, // Add when image upload is implemented
-        created_at: new Date().toISOString()
+        images: []
       };
 
-      // Insert job into database
-      const { data, error } = await supabase
-        .from('jobs')
-        .insert([jobRecord])
-        .select()
-        .single();
+      // Insert job into database using the job service
+      const { data: createdJob, error } = await createJob(jobRecord);
 
       if (error) {
         throw error;
       }
 
-      console.log('Job created successfully:', data);
+      console.log('Job created successfully:', createdJob);
+
+      // Upload images if any
+      if (jobData.images && jobData.images.length > 0) {
+        console.log('Uploading images...');
+        const { urls, error: uploadError } = await uploadJobImages(jobData.images, createdJob.id);
+
+        if (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          alert('Job posted successfully, but some images failed to upload.');
+        } else if (urls.length > 0) {
+          // Update job with image URLs
+          const { error: updateError } = await updateJob(createdJob.id, { images: urls });
+
+          if (updateError) {
+            console.error('Error updating job with image URLs:', updateError);
+          } else {
+            console.log('Images uploaded successfully:', urls);
+          }
+        }
+      }
 
       // Show success message
       alert('Job posted successfully! Professionals in your area will be notified.');
 
-      // Refresh the job feed (you might want to implement a refresh mechanism)
-      window.location.reload();
+      // Trigger a refresh of the job feed
+      // The real-time subscription will automatically update the feed
+      setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error creating job:', error);
       throw error;
@@ -123,7 +137,7 @@ const HomeDashboard = () => {
 
         {/* Job Feed */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <JobFeed activeFilters={activeFilters} />
+          <JobFeed filters={activeFilters} refreshTrigger={refreshTrigger} />
         </div>
 
         {/* Preview Mode Notice */}

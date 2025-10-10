@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import JobCard from './JobCard';
 import JobCardSkeleton from './JobCardSkeleton';
 import Icon from '../../../components/AppIcon';
+import { fetchJobs, subscribeToJobs, unsubscribeFromJobs } from '../../../utils/jobService';
 
 const JobFeed = ({ filters, refreshTrigger }) => {
   const [jobs, setJobs] = useState([]);
@@ -9,202 +10,141 @@ const JobFeed = ({ filters, refreshTrigger }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-
-  // Mock job data
-  const mockJobs = [
-    {
-      id: 1,
-      title: "Emergency Plumbing Repair - Kitchen Sink Leak",
-      category: "Plumbing",
-      location: "Victoria Island, Lagos",
-      distance: "2.3 km",
-      timePeriod: "ASAP",
-      urgency: "urgent",
-      description: "Kitchen sink has a major leak under the cabinet. Water is pooling and needs immediate attention. Looking for licensed plumber available today.",
-      budget: "60,000",
-      budgetType: "fixed",
-      postedDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      poster: {
-        name: "Sarah Johnson",
-        rating: 4.8,
-        reviewCount: 23
-      }
-    },
-    {
-      id: 2,
-      title: "House Cleaning Service - Weekly Recurring",
-      category: "Cleaning",
-      location: "Lekki Phase 1, Lagos",
-      distance: "1.8 km",
-      timePeriod: "Weekly",
-      urgency: "normal",
-      description: "Looking for reliable house cleaning service for 3-bedroom home. Prefer eco-friendly products. Weekly recurring job with potential for long-term relationship.",
-      budget: "50,000",
-      budgetType: "per visit",
-      postedDate: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-      poster: {
-        name: "Michael Chen",
-        rating: 4.9,
-        reviewCount: 45
-      }
-    },
-    {
-      id: 3,
-      title: "Electrical Outlet Installation - Home Office",
-      category: "Electrical",
-      location: "Ikeja GRA, Lagos",
-      distance: "3.1 km",
-      timePeriod: "This Week",
-      urgency: "high",
-      description: "Need 4 new electrical outlets installed in home office. Must be licensed electrician. Flexible on timing within this week.",
-      budget: "120,000",
-      budgetType: "fixed",
-      postedDate: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-      poster: {
-        name: "David Rodriguez",
-        rating: 4.7,
-        reviewCount: 12
-      }
-    },
-    {
-      id: 4,
-      title: "Furniture Assembly - New Bedroom Set",
-      category: "Repairs",
-      location: "Ikoyi, Lagos",
-      distance: "2.7 km",
-      timePeriod: "Weekend",
-      urgency: "normal",
-      description: "Need help assembling New bedroom furniture set including bed frame, dresser, and nightstands. All tools will be provided.",
-      budget: "35,000",
-      budgetType: "fixed",
-      postedDate: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-      poster: {
-        name: "Emily Watson",
-        rating: 4.6,
-        reviewCount: 8
-      }
-    },
-    {
-      id: 5,
-      title: "Business Consulting - Marketing Strategy",
-      category: "Consulting",
-      location: "Wuse 2, Abuja",
-      distance: "1.2 km",
-      timePeriod: "2 Weeks",
-      urgency: "normal",
-      description: "Small business owner seeking marketing consultant to develop digital marketing strategy. Experience with local businesses preferred.",
-      budget: "200,000",
-      budgetType: "project",
-      postedDate: new Date(Date.now() - 18 * 60 * 60 * 1000), // 18 hours ago
-      poster: {
-        name: "Robert Kim",
-        rating: 4.9,
-        reviewCount: 67
-      }
-    },
-    {
-      id: 6,
-      title: "Garden Landscaping - Backyard Makeover",
-      category: "Landscaping",
-      location: "Ajah, Lagos",
-      distance: "4.2 km",
-      timePeriod: "Next Month",
-      urgency: "normal",
-      description: "Complete backyard landscaping project including lawn installation, flower beds, and small patio area. Looking for experienced landscaper.",
-      budget: "1,000,000",
-      budgetType: "project",
-      postedDate: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      poster: {
-        name: "Lisa Thompson",
-        rating: 4.8,
-        reviewCount: 34
-      }
-    },
-    {
-      id: 7,
-      title: "Interior Painting - Living Room & Kitchen",
-      category: "Painting",
-      location: "Surulere, Lagos",
-      distance: "2.9 km",
-      timePeriod: "Next Week",
-      urgency: "high",
-      description: "Need professional painter for living room and kitchen. Walls are prepped and ready. Paint will be provided. Looking for clean, quality work.",
-      budget: "320,000",
-      budgetType: "fixed",
-      postedDate: new Date(Date.now() - 30 * 60 * 60 * 1000), // 1.25 days ago
-      poster: {
-        name: "James Wilson",
-        rating: 4.7,
-        reviewCount: 19
-      }
-    },
-    {
-      id: 8,
-      title: "Moving Help - Apartment to House",
-      category: "Moving",
-      location: "Yaba, Lagos",
-      distance: "5.1 km",
-      timePeriod: "This Saturday",
-      urgency: "urgent",
-      description: "Need 2-3 people to help move from 2-bedroom apartment to house. Truck will be provided. Heavy lifting required. Saturday morning preferred.",
-      budget: "80,000",
-      budgetType: "total",
-      postedDate: new Date(Date.now() - 36 * 60 * 60 * 1000), // 1.5 days ago
-      poster: {
-        name: "Amanda Davis",
-        rating: 4.5,
-        reviewCount: 6
-      }
-    }
-  ];
-
-  const filterJobs = (jobList, activeFilters) => {
-    return jobList.filter(job => {
-      // Ensure job object exists and has required properties
-      if (!job) {
-        return false;
-      }
-      
-      if (activeFilters?.category && job?.category !== activeFilters.category) {
-        return false;
-      }
-      if (activeFilters?.urgency && job?.urgency !== activeFilters.urgency) {
-        return false;
-      }
-      return true;
-    });
-  };
+  const [error, setError] = useState(null);
 
   const loadJobs = async (pageNum = 1, isRefresh = false) => {
     if (isRefresh) {
       setLoading(true);
+      setError(null);
     } else {
       setLoadingMore(true);
     }
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Fetch jobs from Supabase with filters
+      const { data, error: fetchError, hasMore: moreAvailable } = await fetchJobs({
+        category: filters?.category || null,
+        urgency: filters?.urgency || null,
+        state: filters?.state || null,
+        city: filters?.city || null,
+        page: pageNum,
+        limit: 10
+      });
 
-    const filteredJobs = filterJobs(mockJobs, filters || {});
-    const startIndex = (pageNum - 1) * 4;
-    const endIndex = startIndex + 4;
-    const newJobs = filteredJobs.slice(startIndex, endIndex);
+      if (fetchError) {
+        throw fetchError;
+      }
 
-    if (isRefresh || pageNum === 1) {
-      setJobs(newJobs);
-    } else {
-      setJobs(prev => [...prev, ...newJobs]);
+      // Transform data to match the expected format
+      const transformedJobs = data.map(job => ({
+        id: job.id,
+        title: job.title,
+        category: job.category,
+        location: `${job.city}, ${job.state}`,
+        distance: null, // Can be calculated if user location is available
+        timePeriod: formatTimePeriod(job.start_date, job.duration, job.duration_unit),
+        urgency: job.urgency,
+        description: job.description,
+        budget: formatBudget(job.budget_min, job.budget_max),
+        budgetType: job.budget_type,
+        postedDate: new Date(job.created_at),
+        poster: {
+          name: 'User', // Will be populated when we join with user profiles
+          rating: 0,
+          reviewCount: 0
+        },
+        rawData: job // Keep original data for reference
+      }));
+
+      if (isRefresh || pageNum === 1) {
+        setJobs(transformedJobs);
+      } else {
+        setJobs(prev => [...prev, ...transformedJobs]);
+      }
+
+      setHasMore(moreAvailable);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading jobs:', err);
+      setError(err.message || 'Failed to load jobs');
+      
+      // If it's the first load and there's an error, show empty state
+      if (isRefresh || pageNum === 1) {
+        setJobs([]);
+      }
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-
-    setHasMore(endIndex < filteredJobs.length);
-    setLoading(false);
-    setLoadingMore(false);
   };
 
+  // Helper function to format time period
+  const formatTimePeriod = (startDate, duration, durationUnit) => {
+    if (!startDate) return 'Flexible';
+    
+    const start = new Date(startDate);
+    const today = new Date();
+    const diffTime = start - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) return 'ASAP';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays <= 3) return 'This Week';
+    if (diffDays <= 7) return 'Next Week';
+    if (diffDays <= 14) return '2 Weeks';
+    if (diffDays <= 30) return 'This Month';
+    
+    return 'Next Month';
+  };
+
+  // Helper function to format budget
+  const formatBudget = (min, max) => {
+    if (!min) return 'Negotiable';
+    
+    const formatNumber = (num) => {
+      return new Intl.NumberFormat('en-NG').format(num);
+    };
+
+    if (max && max !== min) {
+      return `${formatNumber(min)} - ${formatNumber(max)}`;
+    }
+    
+    return formatNumber(min);
+  };
+
+  // Load jobs on mount and when filters change
   useEffect(() => {
     setPage(1);
     loadJobs(1, true);
   }, [filters, refreshTrigger]);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const subscription = subscribeToJobs((payload) => {
+      console.log('Real-time job update:', payload);
+      
+      // Handle different event types
+      if (payload.eventType === 'INSERT') {
+        // Refresh the feed when a new job is posted
+        loadJobs(1, true);
+      } else if (payload.eventType === 'UPDATE') {
+        // Update the specific job in the list
+        setJobs(prev => prev.map(job => 
+          job.id === payload.new.id 
+            ? { ...job, rawData: payload.new }
+            : job
+        ));
+      } else if (payload.eventType === 'DELETE') {
+        // Remove the deleted job from the list
+        setJobs(prev => prev.filter(job => job.id !== payload.old.id));
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribeFromJobs(subscription);
+    };
+  }, []);
 
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
@@ -231,6 +171,26 @@ const JobFeed = ({ filters, refreshTrigger }) => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <Icon name="AlertCircle" size={24} className="text-red-600" />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Error Loading Jobs</h3>
+        <p className="text-muted-foreground text-center max-w-sm mb-4">
+          {error}
+        </p>
+        <button
+          onClick={() => loadJobs(1, true)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   if (jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -239,7 +199,9 @@ const JobFeed = ({ filters, refreshTrigger }) => {
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">No Jobs Found</h3>
         <p className="text-muted-foreground text-center max-w-sm">
-          Try adjusting your filters or check back later for new opportunities.
+          {filters?.category || filters?.urgency 
+            ? 'Try adjusting your filters to see more opportunities.'
+            : 'Be the first to post a job! Click the + button to get started.'}
         </p>
       </div>
     );

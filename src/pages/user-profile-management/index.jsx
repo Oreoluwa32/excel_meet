@@ -7,7 +7,7 @@ import PersonalInfoSection from './components/PersonalInfoSection';
 import ProfessionalSection from './components/ProfessionalSection';
 import SubscriptionSection from './components/SubscriptionSection';
 import AccountSettingsSection from './components/AccountSettingsSection';
-import NigerianProfileSection from './components/NigerianProfileSection';
+import SocialLinksSection from './components/SocialLinksSection';
 import JobHistorySection from './components/JobHistorySection';
 import PaymentMethodsSection from './components/PaymentMethodsSection';
 import { useNavigate } from 'react-router-dom';
@@ -101,7 +101,8 @@ const UserProfileManagement = () => {
     completedJobs: userProfile?.completed_jobs || 0,
     skills: userProfile?.skills || [],
     portfolio: userProfile?.portfolio || [],
-    primaryCategory: userProfile?.primary_category || '',
+    serviceCategories: userProfile?.service_categories || [],
+    primaryCategory: userProfile?.service_categories?.[0] || '',
     verificationStatus: userProfile?.verification_status || 'not_verified',
     settings: userProfile?.settings || {},
     paymentMethods: userProfile?.payment_methods || [],
@@ -123,16 +124,14 @@ const UserProfileManagement = () => {
             {/* Personal Information */}
             <PersonalInfoSection userProfile={userProfile} />
 
-            {/* Nigerian Profile Section */}
-            <NigerianProfileSection />
+            {/* Social Links & Resume Section */}
+            <SocialLinksSection />
 
-            {/* Professional Information (for professionals) */}
-            {userProfile?.role === 'professional' && (
-              <ProfessionalSection 
-                user={userData} 
-                onSave={handleSaveProfileData} 
-              />
-            )}
+            {/* Professional Information (available to all users) */}
+            <ProfessionalSection 
+              user={userData} 
+              onSave={handleSaveProfileData} 
+            />
 
             {/* Job History */}
             <JobHistorySection 

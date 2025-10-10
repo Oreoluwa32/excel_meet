@@ -1,80 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Image from '../../../components/AppImage';
+import { 
+  getProfessionalCompletedJobs, 
+  getProfessionalActiveJobs,
+  getUserPostedJobs 
+} from '../../../utils/jobService';
+import { fetchUserReviews } from '../../../utils/reviewService';
 
 const JobHistorySection = ({ user, onViewJob }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('completed');
+  const [loading, setLoading] = useState(false);
+  const [jobHistory, setJobHistory] = useState({
+    completed: [],
+    active: [],
+    posted: []
+  });
+  const [reviews, setReviews] = useState({});
 
-  const jobHistory = {
-    completed: [
-      {
-        id: 1,
-        title: "Kitchen Plumbing Repair",
-        client: "Sarah Johnson",
-        clientAvatar: "https://randomuser.me/api/portraits/women/32.jpg",
-        completedDate: "2024-12-15",
-        amount: "$150",
-        rating: 5,
-        review: "Excellent work! Fixed the issue quickly and professionally.",
-        category: "Plumbing"
-      },
-      {
-        id: 2,
-        title: "Electrical Outlet Installation",
-        client: "Mike Chen",
-        clientAvatar: "https://randomuser.me/api/portraits/men/45.jpg",
-        completedDate: "2024-12-10",
-        amount: "$85",
-        rating: 4,
-        review: "Good work, arrived on time and completed the job efficiently.",
-        category: "Electrical"
-      },
-      {
-        id: 3,
-        title: "Bathroom Deep Cleaning",
-        client: "Emma Wilson",
-        clientAvatar: "https://randomuser.me/api/portraits/women/28.jpg",
-        completedDate: "2024-12-05",
-        amount: "$120",
-        rating: 5,
-        review: "Amazing attention to detail. Bathroom looks brand new!",
-        category: "Cleaning"
-      }
-    ],
-    active: [
-      {
-        id: 4,
-        title: "Living Room Painting",
-        client: "David Brown",
-        clientAvatar: "https://randomuser.me/api/portraits/men/38.jpg",
-        startDate: "2024-12-20",
-        status: "In Progress",
-        amount: "$300",
-        category: "Painting"
-      }
-    ],
-    posted: user.isProfessional ? [] : [
-      {
-        id: 5,
-        title: "Garden Landscaping",
-        postedDate: "2024-12-18",
-        status: "Open",
-        applicants: 8,
-        budget: "$500-800",
-        category: "Landscaping"
-      },
-      {
-        id: 6,
-        title: "Roof Repair",
-        postedDate: "2024-12-12",
-        status: "Completed",
-        professional: "John Martinez",
-        amount: "$450",
-        category: "Repairs"
-      }
-    ]
+  useEffect(() => {
+    if (isExpanded && user?.id) {
+      loadJobHistory();
+    }
+  }, [isExpanded, user?.id]);
+
+  const loadJobHistory = async () => {
+    setLoading(true);
+    try {
+      // Fetch completed jobs (as professional)
+      const { data: completedJobs } = await getProfessionalCompletedJobs(user.id);
+      
+      // Fetch active jobs (as professional)
+      const { data: activeJobs } = await getProfessionalActiveJobs(user.id);
+      
+      // Fetch posted jobs (as client)
+      const { data: postedJobs } = await getUserPostedJobs(user.id);
+
+      // Fetch reviews for completed jobs
+      const { data: userReviews } = await fetchUserReviews(user.id, 50);
+      const reviewsMap = {};
+      userReviews?.forEach(review => {
+        if (review.job_id) {
+          reviewsMap[review.job_id] = review;
+        }
+      });
+
+      setJobHistory({
+        completed: completedJobs || [],
+        active: activeJobs || [],
+        posted: user.isProfessional ? [] : (postedJobs || [])
+      });
+      setReviews(reviewsMap);
+    } catch (error) {
+      console.error('Error loading job history:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const tabs = [
@@ -94,98 +77,130 @@ const JobHistorySection = ({ user, onViewJob }) => {
     ));
   };
 
-  const renderJobCard = (job, type) => (
-    <div key={job.id} className="p-4 border border-border rounded-lg hover:border-primary/50 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h5 className="font-medium text-foreground mb-1">{job.title}</h5>
-          <span className="inline-block px-2 py-1 bg-secondary/10 text-secondary text-xs rounded">
-            {job.category}
-          </span>
-        </div>
-        <span className="text-lg font-semibold text-foreground">
-          {job.amount || job.budget}
-        </span>
-      </div>
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
 
-      {type === 'completed' && (
-        <>
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 rounded-full overflow-hidden">
-              <Image
-                src={job.clientAvatar}
-                alt={job.client}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">{job.client}</p>
-              <p className="text-xs text-muted-foreground">Completed on {job.completedDate}</p>
-            </div>
-          </div>
+  const formatBudget = (job) => {
+    if (!job.budget_min && !job.budget_max) return 'N/A';
+    if (job.budget_type === 'fixed') {
+      return `₦${job.budget_min?.toLocaleString()}`;
+    }
+    return `₦${job.budget_min?.toLocaleString()} - ₦${job.budget_max?.toLocaleString()}`;
+  };
 
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="flex space-x-1">
-              {renderStars(job.rating)}
-            </div>
-            <span className="text-sm text-muted-foreground">({job.rating}/5)</span>
-          </div>
-
-          <p className="text-sm text-muted-foreground mb-3">"{job.review}"</p>
-        </>
-      )}
-
-      {type === 'active' && (
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full overflow-hidden">
-              <Image
-                src={job.clientAvatar}
-                alt={job.client}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">{job.client}</p>
-              <p className="text-xs text-muted-foreground">Started on {job.startDate}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-warning rounded-full" />
-            <span className="text-sm text-warning font-medium">{job.status}</span>
-          </div>
-        </div>
-      )}
-
-      {type === 'posted' && (
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Posted on {job.postedDate}</p>
-            <span className={`px-2 py-1 text-xs rounded ${
-              job.status === 'Open' ?'bg-success/10 text-success' :'bg-muted text-muted-foreground'
-            }`}>
-              {job.status}
+  const renderJobCard = (job, type) => {
+    const review = reviews[job.id];
+    
+    return (
+      <div key={job.id} className="p-4 border border-border rounded-lg hover:border-primary/50 transition-colors">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <h5 className="font-medium text-foreground mb-1">{job.title}</h5>
+            <span className="inline-block px-2 py-1 bg-secondary/10 text-secondary text-xs rounded">
+              {job.category}
             </span>
           </div>
-          {job.applicants && (
-            <p className="text-sm text-muted-foreground">{job.applicants} applicants</p>
-          )}
-          {job.professional && (
-            <p className="text-sm text-foreground">Completed by {job.professional}</p>
-          )}
+          <span className="text-lg font-semibold text-foreground">
+            {formatBudget(job)}
+          </span>
         </div>
-      )}
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onViewJob(job.id)}
-        className="w-full"
-      >
-        View Details
-      </Button>
-    </div>
-  );
+        {type === 'completed' && (
+          <>
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-muted">
+                {job.poster_avatar ? (
+                  <Image
+                    src={job.poster_avatar}
+                    alt={job.poster_name || 'Client'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <Icon name="User" size={16} />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">{job.poster_name || 'Client'}</p>
+                <p className="text-xs text-muted-foreground">Completed on {formatDate(job.updated_at)}</p>
+              </div>
+            </div>
+
+            {review && (
+              <>
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex space-x-1">
+                    {renderStars(review.rating)}
+                  </div>
+                  <span className="text-sm text-muted-foreground">({review.rating}/5)</span>
+                </div>
+                {review.comment && (
+                  <p className="text-sm text-muted-foreground mb-3">"{review.comment}"</p>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {type === 'active' && (
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-muted">
+                {job.poster_avatar ? (
+                  <Image
+                    src={job.poster_avatar}
+                    alt={job.poster_name || 'Client'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <Icon name="User" size={16} />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">{job.poster_name || 'Client'}</p>
+                <p className="text-xs text-muted-foreground">Started on {formatDate(job.start_date)}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-warning rounded-full" />
+              <span className="text-sm text-warning font-medium capitalize">{job.status?.replace('_', ' ')}</span>
+            </div>
+          </div>
+        )}
+
+        {type === 'posted' && (
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Posted on {formatDate(job.created_at)}</p>
+              <span className={`px-2 py-1 text-xs rounded capitalize ${
+                job.status === 'open' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'
+              }`}>
+                {job.status?.replace('_', ' ')}
+              </span>
+            </div>
+            {job.application_count !== undefined && (
+              <p className="text-sm text-muted-foreground">{job.application_count} applicant{job.application_count !== 1 ? 's' : ''}</p>
+            )}
+          </div>
+        )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onViewJob(job.id)}
+          className="w-full"
+        >
+          View Details
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg">
@@ -229,7 +244,12 @@ const JobHistorySection = ({ user, onViewJob }) => {
 
             {/* Job Cards */}
             <div className="space-y-4">
-              {jobHistory[activeTab]?.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-3"></div>
+                  <p className="text-muted-foreground">Loading jobs...</p>
+                </div>
+              ) : jobHistory[activeTab]?.length > 0 ? (
                 jobHistory[activeTab].map((job) => renderJobCard(job, activeTab))
               ) : (
                 <div className="text-center py-8">
@@ -254,13 +274,23 @@ const JobHistorySection = ({ user, onViewJob }) => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-foreground">
-                      {(jobHistory.completed.reduce((sum, job) => sum + job.rating, 0) / jobHistory.completed.length).toFixed(1)}
+                      {(() => {
+                        const reviewsWithRatings = jobHistory.completed
+                          .map(job => reviews[job.id]?.rating)
+                          .filter(rating => rating !== undefined);
+                        if (reviewsWithRatings.length === 0) return 'N/A';
+                        const avg = reviewsWithRatings.reduce((sum, rating) => sum + rating, 0) / reviewsWithRatings.length;
+                        return avg.toFixed(1);
+                      })()}
                     </div>
                     <div className="text-sm text-muted-foreground">Avg Rating</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-foreground">
-                      ${jobHistory.completed.reduce((sum, job) => sum + parseInt(job.amount.replace('$', '')), 0)}
+                      ₦{jobHistory.completed.reduce((sum, job) => {
+                        const amount = job.budget_type === 'fixed' ? job.budget_min : (job.budget_min + job.budget_max) / 2;
+                        return sum + (amount || 0);
+                      }, 0).toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">Total Earned</div>
                   </div>

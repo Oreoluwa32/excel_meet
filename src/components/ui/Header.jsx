@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from './Button';
+import NotificationBell from '../NotificationBell';
 import { Bell, Menu, User, LogOut, Settings } from 'lucide-react';
 
 const Header = ({ title, showBack = false, showProfile = true }) => {
@@ -14,7 +15,7 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left side */}
@@ -46,9 +47,7 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
             {user ? (
               <>
                 {/* Notifications */}
-                <Button variant="ghost" size="sm">
-                  <Bell size={20} />
-                </Button>
+                <NotificationBell />
 
                 {/* Profile Menu */}
                 {showProfile && (

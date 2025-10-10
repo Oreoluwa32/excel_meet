@@ -4,7 +4,6 @@ import { PreferencesProvider } from "./contexts/PreferencesContext";
 import Routes from "./Routes";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineIndicator from "./components/OfflineIndicator";
-import SupabaseDebug from "./components/SupabaseDebug";
 import { validateEnv } from "./utils/envValidator";
 import { analytics } from "./utils/analytics";
 import { monitorPageLoad } from "./utils/performance";
@@ -42,7 +41,6 @@ function App() {
       <AuthProvider>
         <PreferencesProvider>
           <OfflineIndicator />
-          <SupabaseDebug />
           <Routes />
         </PreferencesProvider>
       </AuthProvider>

@@ -4,14 +4,31 @@ import Icon from '../../../components/AppIcon';
 const FilterChips = ({ activeFilters = {}, onFilterChange }) => {
   const categories = [
     'All',
-    'Plumbing',
-    'Electrical',
-    'Cleaning',
-    'Repairs',
-    'Consulting',
-    'Landscaping',
-    'Painting',
-    'Moving'
+    'Information Technology',
+    'Engineering',
+    'Healthcare',
+    'Education',
+    'Finance and Accounting',
+    'Marketing and Advertising',
+    'Sales and Business Development',
+    'Human Resources',
+    'Customer Service',
+    'Administration and Office Support',
+    'Legal',
+    'Manufacturing and Production',
+    'Construction and Skilled Trades',
+    'Logistics and Supply Chain',
+    'Hospitality and Tourism',
+    'Creative Arts and Design',
+    'Media and Communications',
+    'Science and Research',
+    'Agriculture and Farming',
+    'Public Sector and Government',
+    'Nonprofit and Community Services',
+    'Real Estate and Property',
+    'Retail',
+    'Security and Law Enforcement',
+    'Transportation and Driving'
   ];
 
   const urgencyLevels = [

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import Modal from '../../../components/Modal';
 import NigerianStateSelect from '../../../components/ui/NigerianStateSelect';
-import { MapPin, DollarSign, Calendar, AlertCircle, Briefcase, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { MapPin, Calendar, AlertCircle, Briefcase, FileText, Image as ImageIcon, X } from 'lucide-react';
 
 /**
  * CreateJobModal Component
- * Modal for creating a new job posting or finding a professional
+ * Modal for creating a new job posting or editing an existing one
  */
-const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
+const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialData = null }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [images, setImages] = useState([]);
@@ -30,20 +30,88 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
     requirements: ''
   });
 
+  // Load initial data when in edit mode
+  React.useEffect(() => {
+    if (editMode && initialData && isOpen) {
+      setFormData({
+        title: initialData.title || '',
+        category: initialData.category || '',
+        description: initialData.description || '',
+        budget_min: initialData.budget_min || '',
+        budget_max: initialData.budget_max || '',
+        budget_type: initialData.budget_type || 'fixed',
+        urgency: initialData.urgency || 'normal',
+        state: initialData.state || '',
+        city: initialData.city || '',
+        address: initialData.address || '',
+        start_date: initialData.start_date || '',
+        duration: initialData.duration || '',
+        duration_unit: initialData.duration_unit || 'days',
+        skills_required: initialData.skills_required || [],
+        requirements: initialData.requirements || ''
+      });
+
+      // Load existing images as preview URLs
+      if (initialData.images && initialData.images.length > 0) {
+        const existingImages = initialData.images.map((url, index) => ({
+          preview: url,
+          name: `existing-image-${index}`,
+          isExisting: true,
+          url: url
+        }));
+        setImages(existingImages);
+      }
+    } else if (!isOpen) {
+      // Reset form when modal closes
+      setFormData({
+        title: '',
+        category: '',
+        description: '',
+        budget_min: '',
+        budget_max: '',
+        budget_type: 'fixed',
+        urgency: 'normal',
+        state: '',
+        city: '',
+        address: '',
+        start_date: '',
+        duration: '',
+        duration_unit: 'days',
+        skills_required: [],
+        requirements: ''
+      });
+      setImages([]);
+      setErrors({});
+    }
+  }, [editMode, initialData, isOpen]);
+
   // Service categories
   const categories = [
-    'Plumbing',
-    'Electrical',
-    'Cleaning',
-    'Repairs',
-    'Consulting',
-    'Landscaping',
-    'Painting',
-    'Moving',
-    'Carpentry',
-    'HVAC',
-    'Security',
-    'Catering'
+    'Information Technology',
+    'Engineering',
+    'Healthcare',
+    'Education',
+    'Finance and Accounting',
+    'Marketing and Advertising',
+    'Sales and Business Development',
+    'Human Resources',
+    'Customer Service',
+    'Administration and Office Support',
+    'Legal',
+    'Manufacturing and Production',
+    'Construction and Skilled Trades',
+    'Logistics and Supply Chain',
+    'Hospitality and Tourism',
+    'Creative Arts and Design',
+    'Media and Communications',
+    'Science and Research',
+    'Agriculture and Farming',
+    'Public Sector and Government',
+    'Nonprofit and Community Services',
+    'Real Estate and Property',
+    'Retail',
+    'Security and Law Enforcement',
+    'Transportation and Driving'
   ];
 
   // Urgency levels
@@ -137,7 +205,8 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
     const newImages = validFiles.map(file => ({
       file,
       preview: URL.createObjectURL(file),
-      name: file.name
+      name: file.name,
+      isExisting: false
     }));
 
     setImages(prev => [...prev, ...newImages].slice(0, 5)); // Max 5 images
@@ -147,7 +216,10 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
   const handleRemoveImage = (index) => {
     setImages(prev => {
       const newImages = [...prev];
-      URL.revokeObjectURL(newImages[index].preview);
+      // Only revoke object URL if it's not an existing image URL
+      if (!newImages[index].isExisting) {
+        URL.revokeObjectURL(newImages[index].preview);
+      }
       newImages.splice(index, 1);
       return newImages;
     });
@@ -274,7 +346,7 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Create Job Posting"
+      title={editMode ? "Edit Job Posting" : "Create Job Posting"}
       size="lg"
       closeOnOverlayClick={!isSubmitting}
       closeOnEscape={!isSubmitting}
@@ -358,7 +430,7 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
               Budget (Min) <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">₦</span>
               <input
                 type="number"
                 id="budget_min"
@@ -382,7 +454,7 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
               Budget (Max) <span className="text-gray-400">(Optional)</span>
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">₦</span>
               <input
                 type="number"
                 id="budget_max"
@@ -678,10 +750,10 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit }) => {
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Creating...
+                {editMode ? 'Updating...' : 'Creating...'}
               </span>
             ) : (
-              'Create Job Posting'
+              editMode ? 'Update Job Posting' : 'Create Job Posting'
             )}
           </button>
         </div>

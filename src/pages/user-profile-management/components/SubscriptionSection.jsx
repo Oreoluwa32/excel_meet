@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '../../../components/ui/Button';
 import { Crown, Check, X } from 'lucide-react';
+import { initializeSubscription, cancelSubscription, recordPayment, updateUserSubscription } from '../../../utils/paystackService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const SubscriptionSection = ({ userProfile }) => {
-  const currentPlan = userProfile?.subscription_plan || 'free';
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [processingPlan, setProcessingPlan] = useState(null);
+  const currentPlan = userProfile?.subscription_tier || 'free';
 
   const plans = {
     free: {
       name: 'Free',
       price: '₦0',
+      amount: 0,
+      planCode: null,
       features: [
         'Basic job search',
         'Limited job applications (5/week)',
@@ -24,6 +31,8 @@ const SubscriptionSection = ({ userProfile }) => {
     basic: {
       name: 'Basic',
       price: '₦4,000/month',
+      amount: 4000,
+      planCode: 'PLN_basic_monthly', // Replace with your actual Paystack plan code
       features: [
         'Enhanced job search',
         'Unlimited job applications',
@@ -38,6 +47,8 @@ const SubscriptionSection = ({ userProfile }) => {
     pro: {
       name: 'Pro',
       price: '₦8,000/month',
+      amount: 8000,
+      planCode: 'PLN_pro_monthly', // Replace with your actual Paystack plan code
       features: [
         'Everything in Basic',
         'Access to premium professionals',
@@ -51,6 +62,8 @@ const SubscriptionSection = ({ userProfile }) => {
     elite: {
       name: 'Elite',
       price: '₦16,000/month',
+      amount: 16000,
+      planCode: 'PLN_elite_monthly', // Replace with your actual Paystack plan code
       features: [
         'Everything in Pro',
         'Dedicated account manager',
@@ -61,6 +74,99 @@ const SubscriptionSection = ({ userProfile }) => {
       ],
       limitations: [],
     },
+  };
+
+  const handleUpgrade = async (planKey) => {
+    const plan = plans[planKey];
+    if (!plan.planCode) return;
+
+    setProcessingPlan(planKey);
+    setLoading(true);
+
+    try {
+      const reference = `SUB_${user.id}_${planKey}_${Date.now()}`;
+
+      await initializeSubscription(
+        {
+          planCode: plan.planCode,
+          email: user.email,
+          reference,
+          metadata: {
+            user_id: user.id,
+            subscription_type: planKey,
+            plan_name: plan.name
+          }
+        },
+        async (response) => {
+          // Success callback
+          console.log('Subscription successful:', response);
+          
+          // Record payment
+          await recordPayment({
+            reference: response.reference,
+            amount: plan.amount * 100, // Convert to kobo
+            status: 'successful'
+          });
+
+          // Update user subscription
+          const nextMonth = new Date();
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+          await updateUserSubscription(user.id, {
+            tier: planKey,
+            status: 'active',
+            start_date: new Date().toISOString(),
+            end_date: nextMonth.toISOString(),
+            subscription_code: response.reference
+          });
+
+          alert(`Successfully upgraded to ${plan.name} plan!`);
+          window.location.reload(); // Refresh to show updated subscription
+        },
+        () => {
+          // Close callback
+          console.log('Payment window closed');
+          setLoading(false);
+          setProcessingPlan(null);
+        }
+      );
+    } catch (error) {
+      console.error('Error upgrading subscription:', error);
+      alert('Failed to process subscription. Please try again.');
+      setLoading(false);
+      setProcessingPlan(null);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? You will lose access to premium features.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const subscriptionCode = userProfile?.paystack_subscription_code;
+      
+      if (subscriptionCode) {
+        // Cancel on Paystack (requires email token - you'll need to implement this flow)
+        // For now, we'll just update locally
+        await updateUserSubscription(user.id, {
+          tier: 'free',
+          status: 'cancelled',
+          start_date: null,
+          end_date: null,
+          subscription_code: null
+        });
+      }
+
+      alert('Subscription cancelled successfully.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      alert('Failed to cancel subscription. Please contact support.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const currentPlanDetails = plans[currentPlan];
@@ -140,12 +246,10 @@ const SubscriptionSection = ({ userProfile }) => {
                   <Button
                     size="sm"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => {
-                      // Handle upgrade
-                      console.log(`Upgrade to ${plan.name}`);
-                    }}
+                    onClick={() => handleUpgrade(key)}
+                    disabled={loading || processingPlan === key}
                   >
-                    Upgrade to {plan.name}
+                    {processingPlan === key ? 'Processing...' : `Upgrade to ${plan.name}`}
                   </Button>
                 </div>
               ))}
@@ -154,16 +258,24 @@ const SubscriptionSection = ({ userProfile }) => {
       )}
 
       {/* Billing Info */}
-      <div className="mt-6 pt-6 border-t">
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>Next billing date:</span>
-          <span>January 15, 2025</span>
+      {currentPlan !== 'free' && userProfile?.subscription_end_date && (
+        <div className="mt-6 pt-6 border-t">
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>Next billing date:</span>
+            <span>{new Date(userProfile.subscription_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
+            <span>Payment method:</span>
+            <span>Paystack</span>
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
+            <span>Status:</span>
+            <span className={`capitalize ${userProfile.subscription_status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
+              {userProfile.subscription_status || 'Active'}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
-          <span>Payment method:</span>
-          <span>•••• •••• •••• 1234</span>
-        </div>
-      </div>
+      )}
 
       {/* Cancel Subscription */}
       {currentPlan !== 'free' && (
@@ -172,12 +284,10 @@ const SubscriptionSection = ({ userProfile }) => {
             variant="ghost"
             size="sm"
             className="text-red-600 hover:text-red-800"
-            onClick={() => {
-              // Handle cancellation
-              console.log('Cancel subscription');
-            }}
+            onClick={handleCancelSubscription}
+            disabled={loading}
           >
-            Cancel Subscription
+            {loading ? 'Processing...' : 'Cancel Subscription'}
           </Button>
         </div>
       )}

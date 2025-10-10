@@ -8,7 +8,7 @@ const ProfessionalCard = ({ professional }) => {
   const navigate = useNavigate();
 
   const handleViewProfile = () => {
-    navigate('/professional-profile', { state: { professionalId: professional.id } });
+    navigate('/professional-profile', { state: { userId: professional.id } });
   };
 
   const handleChat = () => {
