@@ -10,17 +10,18 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from parent directory
+// Load environment variables from parent directory (for local development)
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
-const PORT = process.env.WEBHOOK_PORT || 3001;
+const PORT = process.env.PORT || process.env.WEBHOOK_PORT || 3001;
 
 // Initialize Supabase client with service role key for admin access
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // We'll add this to .env
-);
+// Support both SUPABASE_URL (production) and VITE_SUPABASE_URL (local)
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Middleware
 app.use(cors());
