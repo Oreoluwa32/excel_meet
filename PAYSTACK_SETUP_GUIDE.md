@@ -120,44 +120,70 @@ CREATE INDEX IF NOT EXISTS idx_payment_history_user_id ON payment_history(user_i
 CREATE INDEX IF NOT EXISTS idx_payment_history_reference ON payment_history(payment_reference);
 ```
 
-## Step 5: Set Up Webhooks (Optional but Recommended)
+## Step 5: Set Up Webhooks (Recommended for Automatic Subscription Management)
 
-Webhooks allow Paystack to notify your application about subscription events.
+✨ **NEW: Complete webhook server included!**
 
-1. In Paystack dashboard, go to **Settings** → **API Keys & Webhooks**
-2. Scroll to **Webhook URL** section
-3. Add your webhook URL: `https://yourdomain.com/api/webhooks/paystack`
-4. Select the events you want to receive:
-   - `subscription.create`
-   - `subscription.disable`
-   - `charge.success`
-   - `invoice.create`
-   - `invoice.payment_failed`
+Webhooks allow Paystack to automatically notify your application about subscription events, enabling:
+- ✅ Automatic subscription updates
+- ✅ Payment tracking
+- ✅ Renewal handling
+- ✅ Failed payment management
+- ✅ Cancellation processing
 
-### Create Webhook Handler (Backend Required):
+### Quick Webhook Setup (5 minutes):
 
-You'll need to create a backend endpoint to handle webhooks. Here's a basic example:
+**📖 See `WEBHOOK_QUICK_START.md` for the complete guide!**
 
-```javascript
-// Example webhook handler (you'll need to implement this on your backend)
-app.post('/api/webhooks/paystack', async (req, res) => {
-  const hash = crypto
-    .createHmac('sha512', PAYSTACK_SECRET_KEY)
-    .update(JSON.stringify(req.body))
-    .digest('hex');
+**Quick steps:**
 
-  if (hash === req.headers['x-paystack-signature']) {
-    const event = req.body;
-    
-    // Handle the event using the handleSubscriptionWebhook function
-    await handleSubscriptionWebhook(event);
-    
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(400);
-  }
-});
-```
+1. **Get Supabase Service Role Key**
+   - Go to Supabase Dashboard → Settings → API
+   - Copy the `service_role` key
+   - Add to `.env`: `SUPABASE_SERVICE_ROLE_KEY=your_key`
+
+2. **Install & Start Webhook Server**
+   ```powershell
+   cd server
+   npm install
+   npm start
+   ```
+
+3. **Create Public Tunnel (for localhost)**
+   ```powershell
+   # In a new terminal
+   cd server
+   node ngrok-setup.js
+   ```
+
+4. **Configure Paystack**
+   - Copy the ngrok URL from terminal
+   - Go to Paystack Dashboard → Settings → Developer
+   - Paste URL in "Webhook URL" field
+   - Select events: charge.success, subscription.create, subscription.disable, invoice.update, invoice.payment_failed
+
+5. **Test It**
+   - Click "Test Webhook" in Paystack dashboard
+   - Check webhook server terminal for the test event
+
+### What Gets Automated:
+
+| Event | Automatic Action |
+|-------|------------------|
+| Payment succeeds | ✅ Recorded in payment_history |
+| Subscription created | ✅ User upgraded to paid tier |
+| Subscription renewed | ✅ Extended by 30 days |
+| Payment fails | ✅ Status updated to payment_failed |
+| User cancels | ✅ Downgraded to free tier |
+
+### For Production:
+
+Deploy the webhook server to any hosting service and update the webhook URL in Paystack to your production domain.
+
+**📚 Detailed Documentation:**
+- `WEBHOOK_QUICK_START.md` - 5-minute setup guide
+- `WEBHOOK_SETUP_GUIDE.md` - Complete documentation with troubleshooting
+- `server/README.md` - Server-specific documentation
 
 ## Step 6: Testing the Integration
 

@@ -32,7 +32,7 @@ const SubscriptionSection = ({ userProfile }) => {
       name: 'Basic',
       price: '₦4,000/month',
       amount: 4000,
-      planCode: 'PLN_basic_monthly', // Replace with your actual Paystack plan code
+      planCode: 'PLN_c8ju4nnjje9jwg9',
       features: [
         'Enhanced job search',
         'Unlimited job applications',
@@ -48,7 +48,7 @@ const SubscriptionSection = ({ userProfile }) => {
       name: 'Pro',
       price: '₦8,000/month',
       amount: 8000,
-      planCode: 'PLN_pro_monthly', // Replace with your actual Paystack plan code
+      planCode: 'PLN_i6ijfhscu3l8v3k',
       features: [
         'Everything in Basic',
         'Access to premium professionals',
@@ -63,7 +63,7 @@ const SubscriptionSection = ({ userProfile }) => {
       name: 'Elite',
       price: '₦16,000/month',
       amount: 16000,
-      planCode: 'PLN_elite_monthly', // Replace with your actual Paystack plan code
+      planCode: 'PLN_vg7iryponce5mbt',
       features: [
         'Everything in Pro',
         'Dedicated account manager',
