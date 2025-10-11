@@ -47,8 +47,10 @@ app.get('/health', (req, res) => {
 app.post('/api/webhooks/paystack', async (req, res) => {
   try {
     // Verify webhook signature
+    // Support both PAYSTACK_SECRET_KEY (production) and VITE_PAYSTACK_SECRET_KEY (local)
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY || process.env.VITE_PAYSTACK_SECRET_KEY;
     const hash = crypto
-      .createHmac('sha512', process.env.VITE_PAYSTACK_SECRET_KEY)
+      .createHmac('sha512', paystackSecret)
       .update(JSON.stringify(req.body))
       .digest('hex');
 
