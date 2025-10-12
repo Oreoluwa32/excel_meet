@@ -370,13 +370,23 @@ export const handleSubscriptionWebhook = async (webhookData) => {
 
       case 'subscription.disable':
         // Handle subscription cancellation
-        await updateUserSubscription(data.customer.metadata.user_id, {
-          tier: 'free',
-          status: 'cancelled',
-          start_date: null,
-          end_date: null,
-          subscription_code: null
-        });
+        // Keep the current tier and end_date - user retains access until subscription expires
+        // The subscription will be downgraded to free when it actually expires (handled by a separate process)
+        const { data: currentProfile } = await supabase
+          .from('user_profiles')
+          .select('subscription_tier, subscription_start_date, subscription_end_date, paystack_subscription_code')
+          .eq('id', data.customer.metadata.user_id)
+          .single();
+        
+        if (currentProfile) {
+          await updateUserSubscription(data.customer.metadata.user_id, {
+            tier: currentProfile.subscription_tier, // Keep current tier
+            status: 'cancelled',
+            start_date: currentProfile.subscription_start_date, // Keep start date
+            end_date: currentProfile.subscription_end_date, // Keep end date - access until this date
+            subscription_code: currentProfile.paystack_subscription_code // Keep for reference
+          });
+        }
         break;
 
       case 'charge.success':

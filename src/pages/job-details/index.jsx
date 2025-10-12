@@ -10,6 +10,7 @@ import JobActions from './components/JobActions';
 import ReviewsSection from './components/ReviewsSection';
 import RelatedJobs from './components/RelatedJobs';
 import CreateJobModal from '../home-dashboard/components/CreateJobModal';
+import AdBanner from '../../components/AdBanner';
 import { fetchJobById, saveJob, unsaveJob, isJobSaved, updateJob } from '../../utils/jobService';
 import { fetchUserProfileWithStats } from '../../utils/userService';
 import { fetchUserReviews } from '../../utils/reviewService';
@@ -494,6 +495,9 @@ const JobDetails = () => {
 
             <PosterInfo poster={posterData} loading={loadingPoster} />
 
+            {/* Ad Banner - Between sections */}
+            <AdBanner type="horizontal" className="my-6" />
+
             <ReviewsSection reviews={reviewsData} loading={loadingReviews} />
 
             <JobActions
@@ -511,6 +515,9 @@ const JobDetails = () => {
           {/* Desktop Sidebar */}
           <div className="hidden lg:block w-80 flex-shrink-0">
             <div className="sticky top-28 space-y-6">
+              {/* Vertical Ad Banner */}
+              <AdBanner type="vertical" />
+              
               <RelatedJobs jobs={relatedJobsData} />
             </div>
           </div>

@@ -20,3 +20,7 @@ export {
   SkeletonProfile 
 } from './Skeleton';
 export { default as Toast, ToastContainer } from './Toast';
+
+// Google Ads Components
+export { default as GoogleAd } from './GoogleAd';
+export { default as AdBanner } from './AdBanner';

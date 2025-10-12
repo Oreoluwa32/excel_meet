@@ -7,6 +7,7 @@ import SubscriptionBanner from './components/SubscriptionBanner';
 import FilterChips from './components/FilterChips';
 import FloatingActionButton from '../../components/ui/FloatingActionButton';
 import CreateJobModal from './components/CreateJobModal';
+import AdBanner from '../../components/AdBanner';
 import { Plus } from 'lucide-react';
 import { createJob, uploadJobImages, updateJob } from '../../utils/jobService';
 
@@ -127,6 +128,9 @@ const HomeDashboard = () => {
           <SubscriptionBanner />
         )}
 
+        {/* Top Ad Banner - Horizontal */}
+        <AdBanner type="horizontal" className="mt-4" />
+
         {/* Filter Chips */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <FilterChips 
@@ -139,6 +143,9 @@ const HomeDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <JobFeed filters={activeFilters} refreshTrigger={refreshTrigger} />
         </div>
+
+        {/* Bottom Ad Banner - Square */}
+        <AdBanner type="square" className="mt-6" />
 
         {/* Preview Mode Notice */}
         {!user && (

@@ -10,6 +10,7 @@ import FilterPanel from './components/FilterPanel';
 import SearchHistory from './components/SearchHistory';
 import EmptyState from './components/EmptyState';
 import LoadingState from './components/LoadingState';
+import AdBanner from '../../components/AdBanner';
 
 const SearchDiscovery = () => {
   const location = useLocation();
@@ -393,16 +394,29 @@ const SearchDiscovery = () => {
                 // Loading State
                 <LoadingState type={activeTab} />
               ) : hasResults ? (
-                // Results Grid
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {filteredResults.map((item) => (
-                    activeTab === 'jobs' ? (
-                      <JobCard key={item.id} job={item} />
-                    ) : (
-                      <ProfessionalCard key={item.id} professional={item} />
-                    )
-                  ))}
-                </div>
+                <>
+                  {/* Top Ad Banner */}
+                  <AdBanner type="horizontal" />
+                  
+                  {/* Results Grid */}
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {filteredResults.map((item, index) => (
+                      <React.Fragment key={item.id}>
+                        {activeTab === 'jobs' ? (
+                          <JobCard job={item} />
+                        ) : (
+                          <ProfessionalCard professional={item} />
+                        )}
+                        {/* Insert ad after every 4 results */}
+                        {(index + 1) % 4 === 0 && index !== filteredResults.length - 1 && (
+                          <div className="lg:col-span-2">
+                            <AdBanner type="horizontal" />
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </>
               ) : (
                 // Empty State
                 <EmptyState

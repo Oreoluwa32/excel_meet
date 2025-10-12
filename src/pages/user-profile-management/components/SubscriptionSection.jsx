@@ -139,7 +139,7 @@ const SubscriptionSection = ({ userProfile }) => {
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription? You will lose access to premium features.')) {
+    if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your billing period.')) {
       return;
     }
 
@@ -150,16 +150,20 @@ const SubscriptionSection = ({ userProfile }) => {
       if (subscriptionCode) {
         // Cancel on Paystack (requires email token - you'll need to implement this flow)
         // For now, we'll just update locally
+        // Keep the current tier and end_date - user retains access until subscription expires
         await updateUserSubscription(user.id, {
-          tier: 'free',
+          tier: userProfile.subscription_tier, // Keep current tier
           status: 'cancelled',
-          start_date: null,
-          end_date: null,
-          subscription_code: null
+          start_date: userProfile.subscription_start_date, // Keep start date
+          end_date: userProfile.subscription_end_date, // Keep end date - access until this date
+          subscription_code: subscriptionCode // Keep subscription code for reference
         });
       }
 
-      alert('Subscription cancelled successfully.');
+      alert('Subscription cancelled successfully. You will retain access until ' + 
+            new Date(userProfile.subscription_end_date).toLocaleDateString('en-US', { 
+              year: 'numeric', month: 'long', day: 'numeric' 
+            }));
       window.location.reload();
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -260,8 +264,15 @@ const SubscriptionSection = ({ userProfile }) => {
       {/* Billing Info */}
       {currentPlan !== 'free' && userProfile?.subscription_end_date && (
         <div className="mt-6 pt-6 border-t">
+          {userProfile.subscription_status === 'cancelled' && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Subscription Cancelled:</strong> You will retain access to {currentPlanDetails?.name} features until your subscription expires.
+              </p>
+            </div>
+          )}
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Next billing date:</span>
+            <span>{userProfile.subscription_status === 'cancelled' ? 'Access expires on:' : 'Next billing date:'}</span>
             <span>{new Date(userProfile.subscription_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
           </div>
           <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
@@ -270,15 +281,19 @@ const SubscriptionSection = ({ userProfile }) => {
           </div>
           <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
             <span>Status:</span>
-            <span className={`capitalize ${userProfile.subscription_status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
-              {userProfile.subscription_status || 'Active'}
+            <span className={`capitalize ${
+              userProfile.subscription_status === 'active' ? 'text-green-600' : 
+              userProfile.subscription_status === 'cancelled' ? 'text-yellow-600' : 
+              'text-gray-600'
+            }`}>
+              {userProfile.subscription_status === 'cancelled' ? 'Cancelled (Active until expiry)' : userProfile.subscription_status || 'Active'}
             </span>
           </div>
         </div>
       )}
 
       {/* Cancel Subscription */}
-      {currentPlan !== 'free' && (
+      {currentPlan !== 'free' && userProfile?.subscription_status !== 'cancelled' && (
         <div className="mt-6 pt-6 border-t">
           <Button
             variant="ghost"
