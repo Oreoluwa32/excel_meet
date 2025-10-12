@@ -8,6 +8,7 @@ import Landing from "pages/landing";
 import LoginRegister from "pages/login-register";
 import ForgotPassword from "pages/forgot-password";
 import ResetPassword from "pages/reset-password";
+import EmailVerified from "pages/email-verified";
 import JobDetails from "pages/job-details";
 import JobApplications from "pages/job-applications";
 import Notifications from "pages/notifications";
@@ -51,6 +52,7 @@ const Routes = () => {
         <Route path="/login-register" element={<LoginRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/email-verified" element={<EmailVerified />} />
         
         {/* Protected routes */}
         <Route 

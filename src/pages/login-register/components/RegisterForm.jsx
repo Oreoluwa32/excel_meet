@@ -20,6 +20,7 @@ const RegisterForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -75,7 +76,14 @@ const RegisterForm = () => {
       console.log('Registration result:', result);
       
       if (result?.success) {
-        navigate('/home-dashboard');
+        // Check if email confirmation is required
+        if (result?.data?.user && !result?.data?.session) {
+          // Email confirmation required
+          setSuccess(true);
+        } else {
+          // Auto-login (email confirmation disabled)
+          navigate('/home-dashboard');
+        }
       } else {
         setError(result?.error || 'Registration failed. Please try again.');
       }
@@ -91,6 +99,49 @@ const RegisterForm = () => {
     { value: 'client', label: 'Client - I need services' },
     { value: 'professional', label: 'Professional - I provide services' },
   ];
+
+  // If registration successful and email confirmation required
+  if (success) {
+    return (
+      <div className="space-y-6 text-center">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+          <div className="flex justify-center mb-4">
+            <div className="bg-green-100 rounded-full p-3">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-green-900 mb-2">
+            Check Your Email!
+          </h3>
+          <p className="text-green-700 text-sm mb-4">
+            We've sent a verification link to <strong>{formData.email}</strong>
+          </p>
+          <p className="text-green-600 text-sm">
+            Please click the link in the email to verify your account and complete registration.
+          </p>
+        </div>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-700 text-sm">
+            <strong>Didn't receive the email?</strong>
+          </p>
+          <p className="text-blue-600 text-xs mt-1">
+            Check your spam folder or contact support if you need help.
+          </p>
+        </div>
+
+        <Button
+          onClick={() => navigate('/login-register')}
+          variant="outline"
+          className="w-full"
+        >
+          Back to Login
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

@@ -57,9 +57,9 @@ const DetailViewModal = ({ children, isOpen, onClose, title }) => {
       onClick={handleBackdropClick}
     >
       {/* Mobile: Full Screen */}
-      <div className="lg:hidden fixed inset-0 bg-background">
+      <div className="lg:hidden fixed inset-0 bg-background flex flex-col">
         {/* Mobile Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-card">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-card flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -76,7 +76,7 @@ const DetailViewModal = ({ children, isOpen, onClose, title }) => {
         </div>
         
         {/* Mobile Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </div>

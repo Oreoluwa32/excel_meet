@@ -39,6 +39,7 @@ const authService = {
         password,
         options: {
           data: userData,
+          emailRedirectTo: `${window.location.origin}/email-verified`,
         },
       });
 
