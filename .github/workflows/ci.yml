@@ -120,19 +120,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
           name: build
           path: dist
 
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
       - name: Deploy to Netlify (Staging)
-        uses: netlify/actions/cli@master
+        run: netlify deploy --dir=dist --prod
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_STAGING_SITE_ID }}
-        with:
-          args: deploy --dir=dist --prod
 
   # Deploy to production (on main branch)
   deploy-production:
@@ -145,19 +151,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
           name: build
           path: dist
 
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
       - name: Deploy to Netlify (Production)
-        uses: netlify/actions/cli@master
+        run: netlify deploy --dir=dist --prod
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        with:
-          args: deploy --dir=dist --prod
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')

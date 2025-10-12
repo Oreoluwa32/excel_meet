@@ -17,6 +17,7 @@ import HomeDashboard from "pages/home-dashboard";
 import SearchDiscovery from "pages/search-discovery";
 import UserProfileManagement from "pages/user-profile-management";
 import SavedJobs from "pages/saved-jobs";
+import Messages from "pages/messages";
 import NotFound from "pages/NotFound";
 
 // Protected Route Component
@@ -116,6 +117,14 @@ const Routes = () => {
           element={
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/messages" 
+          element={
+            <ProtectedRoute>
+              <Messages />
             </ProtectedRoute>
           } 
         />

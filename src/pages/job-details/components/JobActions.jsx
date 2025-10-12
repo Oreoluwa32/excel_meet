@@ -108,7 +108,7 @@ const JobActions = ({
             iconName="MessageCircle"
             iconPosition="left"
           >
-            Ask Question
+            Message
           </Button>
           <Button
             variant={hasApplied ? "outline" : "default"}

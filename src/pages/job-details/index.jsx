@@ -15,6 +15,7 @@ import { fetchJobById, saveJob, unsaveJob, isJobSaved, updateJob } from '../../u
 import { fetchUserProfileWithStats } from '../../utils/userService';
 import { fetchUserReviews } from '../../utils/reviewService';
 import { submitApplication, checkUserApplication } from '../../utils/applicationService';
+import { getOrCreateConversation } from '../../utils/messagingService';
 import { useAuth } from '../../contexts/AuthContext';
 
 const JobDetails = () => {
@@ -303,9 +304,34 @@ const JobDetails = () => {
     }
   };
 
-  const handleAskQuestion = () => {
-    console.log('Ask question clicked');
-    alert('Chat feature will be available soon!');
+  const handleAskQuestion = async () => {
+    if (!user) {
+      if (window.confirm('Please login to send messages. Go to login page?')) {
+        navigate('/login-register');
+      }
+      return;
+    }
+
+    if (!jobData) return;
+
+    try {
+      // Get or create conversation
+      const { data: conversationId, error } = await getOrCreateConversation(
+        jobData.id,
+        user.id,
+        jobData.user_id
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      // Navigate to messages page with the conversation
+      navigate('/messages', { state: { conversationId } });
+    } catch (err) {
+      console.error('Error creating conversation:', err);
+      alert('Failed to start conversation. Please try again.');
+    }
   };
 
   const handleEditJob = () => {

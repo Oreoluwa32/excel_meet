@@ -1,10 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUnreadMessageCount } from '../../utils/messagingService';
 
 const BottomTabNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Load unread message count
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      if (!user) return;
+      
+      const { count } = await getUnreadMessageCount(user.id);
+      setUnreadCount(count);
+    };
+
+    loadUnreadCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const tabs = [
     {
@@ -18,6 +38,12 @@ const BottomTabNavigation = () => {
       path: '/search-discovery',
       icon: 'Search',
       badge: 0
+    },
+    {
+      label: 'Messages',
+      path: '/messages',
+      icon: 'MessageCircle',
+      badge: unreadCount
     },
     {
       label: 'Profile',

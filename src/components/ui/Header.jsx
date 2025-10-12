@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from './Button';
 import NotificationBell from '../NotificationBell';
+import Icon from '../AppIcon';
+import { getUnreadMessageCount } from '../../utils/messagingService';
 import { Bell, Menu, User, LogOut, Settings } from 'lucide-react';
 
 const Header = ({ title, showBack = false, showProfile = true }) => {
   const navigate = useNavigate();
   const { user, userProfile, signOut } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Load unread message count
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      if (!user) return;
+      
+      const { count } = await getUnreadMessageCount(user.id);
+      setUnreadCount(count);
+    };
+
+    loadUnreadCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -46,6 +65,20 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
+                {/* Messages */}
+                <button
+                  onClick={() => navigate('/messages')}
+                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Messages"
+                >
+                  <Icon name="MessageCircle" size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
                 {/* Notifications */}
                 <NotificationBell />
 
