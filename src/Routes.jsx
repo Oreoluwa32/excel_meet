@@ -18,6 +18,7 @@ import SearchDiscovery from "pages/search-discovery";
 import UserProfileManagement from "pages/user-profile-management";
 import SavedJobs from "pages/saved-jobs";
 import Messages from "pages/messages";
+import AdminDashboard from "pages/admin-dashboard";
 import NotFound from "pages/NotFound";
 
 // Protected Route Component
@@ -37,6 +38,32 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login-register" replace />;
+  }
+
+  return children;
+};
+
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const { user, userProfile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login-register" replace />;
+  }
+
+  if (userProfile?.role !== 'admin') {
+    return <Navigate to="/home-dashboard" replace />;
   }
 
   return children;
@@ -126,6 +153,14 @@ const Routes = () => {
             <ProtectedRoute>
               <Messages />
             </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           } 
         />
         

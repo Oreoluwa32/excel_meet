@@ -20,6 +20,7 @@ export {
   SkeletonProfile 
 } from './Skeleton';
 export { default as Toast, ToastContainer } from './Toast';
+export { default as SupportTicketForm } from './SupportTicketForm';
 
 // Google Ads Components
 export { default as GoogleAd } from './GoogleAd';

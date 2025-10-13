@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import Button from './Button';
 import NotificationBell from '../NotificationBell';
 import Icon from '../AppIcon';
+import SupportTicketForm from '../SupportTicketForm';
 import { getUnreadMessageCount } from '../../utils/messagingService';
 import { Bell, Menu, User, LogOut, Settings } from 'lucide-react';
 
@@ -11,6 +12,7 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
   const navigate = useNavigate();
   const { user, userProfile, signOut } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showSupportForm, setShowSupportForm] = useState(false);
 
   // Load unread message count
   useEffect(() => {
@@ -82,6 +84,16 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
                 {/* Notifications */}
                 <NotificationBell />
 
+                {/* Support Button */}
+                <button
+                  onClick={() => setShowSupportForm(true)}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Support"
+                  title="Get Support"
+                >
+                  <Icon name="HelpCircle" size={20} />
+                </button>
+
                 {/* Profile Menu */}
                 {showProfile && (
                   <div className="relative group">
@@ -104,6 +116,15 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
                           {userProfile?.role || 'client'}
                         </div>
                       </div>
+                      {userProfile?.role === 'admin' && (
+                        <button
+                          onClick={() => navigate('/admin-dashboard')}
+                          className="block w-full text-left px-4 py-2 text-sm text-purple-600 hover:bg-gray-100 font-medium"
+                        >
+                          <Icon name="Shield" size={16} className="inline mr-2" />
+                          Admin Dashboard
+                        </button>
+                      )}
                       <button
                         onClick={() => navigate('/user-profile-management')}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -133,6 +154,16 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
           </div>
         </div>
       </div>
+
+      {/* Support Ticket Form */}
+      <SupportTicketForm
+        isOpen={showSupportForm}
+        onClose={() => setShowSupportForm(false)}
+        onSuccess={() => {
+          // You can add a toast notification here
+          alert('Support ticket submitted successfully! We will get back to you soon.');
+        }}
+      />
     </header>
   );
 };
