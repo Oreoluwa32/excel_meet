@@ -26,18 +26,29 @@ const ProfessionalCard = ({ professional }) => {
     ));
   };
 
+  const isVerified = professional.verification_status === 'verified';
+  const skills = professional.skills || [];
+  const rating = professional.rating || 0;
+  const reviewCount = professional.reviewCount || 0;
+
   return (
     <div className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start space-x-3 mb-3">
         <div className="relative">
           <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
-            <Image
-              src={professional.avatar}
-              alt={professional.name}
-              className="w-full h-full object-cover"
-            />
+            {professional.avatar_url ? (
+              <Image
+                src={professional.avatar_url}
+                alt={professional.full_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-secondary">
+                <Icon name="User" size={24} color="white" />
+              </div>
+            )}
           </div>
-          {professional.isVerified && (
+          {isVerified && (
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
               <Icon name="Check" size={12} color="white" />
             </div>
@@ -45,49 +56,53 @@ const ProfessionalCard = ({ professional }) => {
         </div>
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-1">
-            <h3 className="font-semibold text-foreground">{professional.name}</h3>
-            {professional.isVerified && (
+            <h3 className="font-semibold text-foreground">{professional.full_name}</h3>
+            {isVerified && (
               <Icon name="BadgeCheck" size={16} className="text-primary" />
             )}
           </div>
-          <p className="text-sm text-muted-foreground mb-2">{professional.title}</p>
+          <p className="text-sm text-muted-foreground mb-2">{professional.role || 'Professional'}</p>
           <div className="flex items-center space-x-1 mb-2">
-            {renderStars(professional.rating)}
+            {renderStars(rating)}
             <span className="text-sm text-muted-foreground ml-1">
-              {professional.rating} ({professional.reviewCount} reviews)
+              {rating.toFixed(1)} ({reviewCount} reviews)
             </span>
           </div>
         </div>
       </div>
 
       <div className="space-y-2 mb-4">
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Icon name="MapPin" size={14} />
-          <span>{professional.location}</span>
-        </div>
+        {professional.location && (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Icon name="MapPin" size={14} />
+            <span>{professional.location}</span>
+          </div>
+        )}
         <div className="flex items-center space-x-2 text-sm">
-          <Icon name="Clock" size={14} className="text-muted-foreground" />
-          <span className={`text-sm ${professional.isAvailable ? 'text-success' : 'text-muted-foreground'}`}>
-            {professional.isAvailable ? 'Available now' : 'Busy'}
+          <Icon name="Briefcase" size={14} className="text-muted-foreground" />
+          <span className="text-sm text-muted-foreground capitalize">
+            {professional.subscription_plan || 'free'} plan
           </span>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 mb-4">
-        {professional.skills.slice(0, 3).map((skill, index) => (
-          <span
-            key={index}
-            className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full"
-          >
-            {skill}
-          </span>
-        ))}
-        {professional.skills.length > 3 && (
-          <span className="text-xs text-muted-foreground px-2 py-1">
-            +{professional.skills.length - 3} more
-          </span>
-        )}
-      </div>
+      {skills.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-4">
+          {skills.slice(0, 3).map((skill, index) => (
+            <span
+              key={index}
+              className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full"
+            >
+              {skill}
+            </span>
+          ))}
+          {skills.length > 3 && (
+            <span className="text-xs text-muted-foreground px-2 py-1">
+              +{skills.length - 3} more
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex space-x-2">
         <Button

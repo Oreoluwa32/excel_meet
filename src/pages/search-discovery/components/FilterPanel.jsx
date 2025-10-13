@@ -117,25 +117,10 @@ const FilterPanel = ({
         </div>
       )}
 
-      {/* Availability (for professionals) */}
+      {/* Verification Status */}
       {activeTab === 'professionals' && (
         <div>
-          <h3 className="font-semibold text-foreground mb-3">Availability</h3>
-          <Checkbox
-            label="Available now"
-            checked={filters.availableNow}
-            onChange={(e) => handleFilterChange('availableNow', e.target.checked)}
-          />
-        </div>
-      )}
-
-      {/* Verification Status (Premium feature) */}
-      {activeTab === 'professionals' && (
-        <div>
-          <h3 className="font-semibold text-foreground mb-3">
-            Verification Status
-            <span className="text-xs text-primary ml-1">(Premium)</span>
-          </h3>
+          <h3 className="font-semibold text-foreground mb-3">Verification Status</h3>
           <Checkbox
             label="Verified professionals only"
             checked={filters.verifiedOnly}

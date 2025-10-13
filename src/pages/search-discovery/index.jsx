@@ -11,6 +11,7 @@ import SearchHistory from './components/SearchHistory';
 import EmptyState from './components/EmptyState';
 import LoadingState from './components/LoadingState';
 import AdBanner from '../../components/AdBanner';
+import { searchJobs, searchProfessionals } from '../../utils/searchService';
 
 const SearchDiscovery = () => {
   const location = useLocation();
@@ -20,232 +21,89 @@ const SearchDiscovery = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const [filters, setFilters] = useState({
     categories: [],
-    distance: 'any',
+    state: '',
+    city: '',
     minRating: 'any',
-    availableNow: false,
     verifiedOnly: false,
     urgentOnly: false,
     sortBy: 'relevance'
   });
 
-  // Mock data
-  const mockJobs = [
-    {
-      id: 1,
-      title: "Emergency Plumbing Repair Needed",
-      category: "Plumbing",
-      location: "Victoria Island, Lagos",
-      postedDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      budget: "60,000-100,000",
-      description: "Need urgent plumbing repair for kitchen sink leak. Water is dripping constantly and needs immediate attention.",
-      posterName: "Sarah Johnson",
-      urgent: true
-    },
-    {
-      id: 2,
-      title: "Website Development for Small Business",
-      category: "Technology",
-      location: "Lekki Phase 1, Lagos",
-      postedDate: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      budget: "800,000-1,400,000",
-      description: "Looking for a skilled web developer to create a modern, responsive website for our local bakery business.",
-      posterName: "Mike Chen",
-      urgent: false
-    },
-    {
-      id: 3,
-      title: "House Deep Cleaning Service",
-      category: "Cleaning",
-      location: "Ikeja GRA, Lagos",
-      postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      budget: "80,000-120,000",
-      description: "Need professional deep cleaning service for 3-bedroom house before family visit next week.",
-      posterName: "Emily Rodriguez",
-      urgent: false
-    },
-    {
-      id: 4,
-      title: "Custom Kitchen Cabinets Installation",
-      category: "Carpentry",
-      location: "Ikoyi, Lagos",
-      postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      budget: "600,000-1,000,000",
-      description: "Looking for experienced carpenter to install custom kitchen cabinets. Materials already purchased.",
-      posterName: "David Wilson",
-      urgent: false
-    },
-    {
-      id: 5,
-      title: "Electrical Outlet Installation",
-      category: "Electrical",
-      location: "Wuse 2, Abuja",
-      postedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      budget: "40,000-80,000",
-      description: "Need licensed electrician to install 3 new outlets in home office. Safety is top priority.",
-      posterName: "Lisa Thompson",
-      urgent: true
-    }
-  ];
+  // Perform search
+  const performSearch = useCallback(async (page = 1) => {
+    setIsLoading(true);
+    
+    try {
+      if (activeTab === 'jobs') {
+        const { data, error, hasMore: more, total } = await searchJobs({
+          query: searchQuery,
+          categories: filters.categories,
+          state: filters.state,
+          city: filters.city,
+          urgentOnly: filters.urgentOnly,
+          sortBy: filters.sortBy,
+          page,
+          limit: 20
+        });
 
-  const mockProfessionals = [
-    {
-      id: 1,
-      name: "John Martinez",
-      title: "Licensed Plumber",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      location: "Lagos, Nigeria",
-      rating: 4.9,
-      reviewCount: 127,
-      isVerified: true,
-      isAvailable: true,
-      skills: ["Emergency Repairs", "Pipe Installation", "Drain Cleaning", "Water Heaters"]
-    },
-    {
-      id: 2,
-      name: "Amanda Foster",
-      title: "Full-Stack Developer",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      location: "Abuja, Nigeria",
-      rating: 4.8,
-      reviewCount: 89,
-      isVerified: true,
-      isAvailable: true,
-      skills: ["React", "Node.js", "MongoDB", "AWS", "UI/UX Design"]
-    },
-    {
-      id: 3,
-      name: "Carlos Rodriguez",
-      title: "Professional Cleaner",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      location: "Lagos, Nigeria",
-      rating: 4.7,
-      reviewCount: 156,
-      isVerified: false,
-      isAvailable: false,
-      skills: ["Deep Cleaning", "Move-in/out", "Office Cleaning", "Carpet Cleaning"]
-    },
-    {
-      id: 4,
-      name: "Robert Kim",
-      title: "Master Carpenter",
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face",
-      location: "Port Harcourt, Nigeria",
-      rating: 5.0,
-      reviewCount: 73,
-      isVerified: true,
-      isAvailable: true,
-      skills: ["Custom Cabinets", "Furniture Repair", "Trim Work", "Flooring"]
-    },
-    {
-      id: 5,
-      name: "Jennifer Walsh",
-      title: "Licensed Electrician",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      location: "Abuja, Nigeria",
-      rating: 4.6,
-      reviewCount: 94,
-      isVerified: true,
-      isAvailable: true,
-      skills: ["Residential Wiring", "Panel Upgrades", "Smart Home", "Troubleshooting"]
-    }
-  ];
-
-  const [filteredResults, setFilteredResults] = useState([]);
-
-  // Filter and search logic
-  const filterResults = useCallback(() => {
-    const data = activeTab === 'jobs' ? mockJobs : mockProfessionals;
-    let filtered = [...data];
-
-    // Search query filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(item => {
-        if (activeTab === 'jobs') {
-          return item.title.toLowerCase().includes(query) ||
-                 item.category.toLowerCase().includes(query) ||
-                 item.location.toLowerCase().includes(query) ||
-                 item.description.toLowerCase().includes(query);
+        if (error) {
+          console.error('Error searching jobs:', error);
+          setSearchResults([]);
+          setTotalResults(0);
+          setHasMore(false);
         } else {
-          return item.name.toLowerCase().includes(query) ||
-                 item.title.toLowerCase().includes(query) ||
-                 item.location.toLowerCase().includes(query) ||
-                 item.skills.some(skill => skill.toLowerCase().includes(query));
+          setSearchResults(data);
+          setTotalResults(total);
+          setHasMore(more);
+          setCurrentPage(page);
         }
-      });
-    }
+      } else {
+        const { data, error, hasMore: more, total } = await searchProfessionals({
+          query: searchQuery,
+          skills: filters.categories,
+          state: filters.state,
+          city: filters.city,
+          minRating: filters.minRating !== 'any' ? parseFloat(filters.minRating) : null,
+          verifiedOnly: filters.verifiedOnly,
+          sortBy: filters.sortBy,
+          page,
+          limit: 20
+        });
 
-    // Category filter
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter(item => {
-        if (activeTab === 'jobs') {
-          return filters.categories.includes(item.category.toLowerCase());
+        if (error) {
+          console.error('Error searching professionals:', error);
+          setSearchResults([]);
+          setTotalResults(0);
+          setHasMore(false);
         } else {
-          return item.skills.some(skill => 
-            filters.categories.some(cat => skill.toLowerCase().includes(cat))
-          );
+          setSearchResults(data);
+          setTotalResults(total);
+          setHasMore(more);
+          setCurrentPage(page);
         }
-      });
-    }
-
-    // Professional-specific filters
-    if (activeTab === 'professionals') {
-      if (filters.minRating !== 'any') {
-        const minRating = parseFloat(filters.minRating);
-        filtered = filtered.filter(item => item.rating >= minRating);
       }
-
-      if (filters.availableNow) {
-        filtered = filtered.filter(item => item.isAvailable);
-      }
-
-      if (filters.verifiedOnly) {
-        filtered = filtered.filter(item => item.isVerified);
-      }
+    } catch (error) {
+      console.error('Error in performSearch:', error);
+      setSearchResults([]);
+      setTotalResults(0);
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Job-specific filters
-    if (activeTab === 'jobs') {
-      if (filters.urgentOnly) {
-        filtered = filtered.filter(item => item.urgent);
-      }
-    }
-
-    // Sorting
-    switch (filters.sortBy) {
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.postedDate || 0) - new Date(a.postedDate || 0));
-        break;
-      case 'rating':
-        if (activeTab === 'professionals') {
-          filtered.sort((a, b) => b.rating - a.rating);
-        }
-        break;
-      case 'distance':
-        // Mock distance sorting - in real app would use actual coordinates
-        filtered.sort((a, b) => a.location.localeCompare(b.location));
-        break;
-      default:
-        // Keep default order for 'relevance'
-        break;
-    }
-
-    setFilteredResults(filtered);
-  }, [searchQuery, activeTab, filters, mockJobs, mockProfessionals]);
+  }, [searchQuery, activeTab, filters]);
 
   // Handle search
   const handleSearch = (query) => {
     setSearchQuery(query);
     setHasSearched(true);
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
+    setCurrentPage(1);
   };
 
   const handleSearchSelect = (query) => {
@@ -255,50 +113,42 @@ const SearchDiscovery = () => {
   const handleClearSearch = () => {
     setSearchQuery('');
     setHasSearched(false);
-    setFilteredResults([]);
+    setSearchResults([]);
+    setTotalResults(0);
+    setCurrentPage(1);
   };
 
   const handleApplyFilters = () => {
     setShowFilters(false);
-    setIsLoading(true);
-    
-    // Simulate filter application delay
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setFilters({
       categories: [],
-      distance: 'any',
+      state: '',
+      city: '',
       minRating: 'any',
-      availableNow: false,
       verifiedOnly: false,
       urgentOnly: false,
       sortBy: 'relevance'
     });
+    setCurrentPage(1);
   };
 
-  // Apply filters when dependencies change
-  useEffect(() => {
-    if (hasSearched || searchQuery) {
-      filterResults();
-    }
-  }, [filterResults, hasSearched, searchQuery]);
+  const handleLoadMore = () => {
+    performSearch(currentPage + 1);
+  };
 
-  // Handle tab change
+  // Perform search when dependencies change
   useEffect(() => {
-    if (hasSearched) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 300);
+    if (hasSearched || searchQuery.trim()) {
+      performSearch(1);
     }
-  }, [activeTab, hasSearched]);
+  }, [searchQuery, activeTab, filters, hasSearched]);
 
   const showResults = hasSearched || searchQuery.trim();
-  const hasResults = filteredResults.length > 0;
+  const hasResults = searchResults.length > 0;
 
   return (
     <div className="min-h-screen bg-background pt-16 lg:pt-28 pb-20 lg:pb-8">
@@ -364,7 +214,7 @@ const SearchDiscovery = () => {
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>
                     {hasResults 
-                      ? `${filteredResults.length} ${activeTab} found`
+                      ? `${totalResults} ${activeTab} found`
                       : `No ${activeTab} found`
                     }
                     {searchQuery && ` for "${searchQuery}"`}
@@ -400,7 +250,7 @@ const SearchDiscovery = () => {
                   
                   {/* Results Grid */}
                   <div className="grid gap-4 lg:grid-cols-2">
-                    {filteredResults.map((item, index) => (
+                    {searchResults.map((item, index) => (
                       <React.Fragment key={item.id}>
                         {activeTab === 'jobs' ? (
                           <JobCard job={item} />
@@ -408,7 +258,7 @@ const SearchDiscovery = () => {
                           <ProfessionalCard professional={item} />
                         )}
                         {/* Insert ad after every 4 results */}
-                        {(index + 1) % 4 === 0 && index !== filteredResults.length - 1 && (
+                        {(index + 1) % 4 === 0 && index !== searchResults.length - 1 && (
                           <div className="lg:col-span-2">
                             <AdBanner type="horizontal" />
                           </div>
@@ -427,11 +277,11 @@ const SearchDiscovery = () => {
               )}
 
               {/* Load More Button */}
-              {hasResults && !isLoading && (
+              {hasResults && !isLoading && hasMore && (
                 <div className="flex justify-center pt-6">
                   <Button
                     variant="outline"
-                    onClick={() => console.log('Load more results')}
+                    onClick={handleLoadMore}
                     iconName="ChevronDown"
                     iconPosition="right"
                   >

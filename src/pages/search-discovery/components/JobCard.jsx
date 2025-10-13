@@ -22,6 +22,18 @@ const JobCard = ({ job }) => {
     return posted.toLocaleDateString();
   };
 
+  const formatBudget = (min, max) => {
+    if (!min) return 'Budget not specified';
+    const formattedMin = min.toLocaleString();
+    const formattedMax = max ? max.toLocaleString() : null;
+    return formattedMax ? `₦${formattedMin} - ₦${formattedMax}` : `₦${formattedMin}`;
+  };
+
+  const location = [job.city, job.state].filter(Boolean).join(', ');
+  const isUrgent = job.urgency === 'urgent';
+  const posterName = job.user_profiles?.full_name || 'Anonymous';
+  const posterAvatar = job.user_profiles?.avatar_url;
+
   return (
     <div className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
@@ -34,7 +46,7 @@ const JobCard = ({ job }) => {
             <span>{job.category}</span>
           </div>
         </div>
-        {job.urgent && (
+        {isUrgent && (
           <span className="bg-error/10 text-error text-xs px-2 py-1 rounded-full font-medium">
             Urgent
           </span>
@@ -42,20 +54,20 @@ const JobCard = ({ job }) => {
       </div>
 
       <div className="space-y-2 mb-4">
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Icon name="MapPin" size={14} />
-          <span>{job.location}</span>
-        </div>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Icon name="Clock" size={14} />
-          <span>{getTimeAgo(job.postedDate)}</span>
-        </div>
-        {job.budget && (
-          <div className="flex items-center space-x-2 text-sm text-foreground font-medium">
-            <Icon name="DollarSign" size={14} />
-            <span>₦{job.budget}</span>
+        {location && (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Icon name="MapPin" size={14} />
+            <span>{location}</span>
           </div>
         )}
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <Icon name="Clock" size={14} />
+          <span>{getTimeAgo(job.created_at)}</span>
+        </div>
+        <div className="flex items-center space-x-2 text-sm text-foreground font-medium">
+          <Icon name="DollarSign" size={14} />
+          <span>{formatBudget(job.budget_min, job.budget_max)}</span>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
@@ -64,10 +76,18 @@ const JobCard = ({ job }) => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-            <Icon name="User" size={14} color="white" />
-          </div>
-          <span className="text-sm text-muted-foreground">{job.posterName}</span>
+          {posterAvatar ? (
+            <img 
+              src={posterAvatar} 
+              alt={posterName}
+              className="w-8 h-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+              <Icon name="User" size={14} color="white" />
+            </div>
+          )}
+          <span className="text-sm text-muted-foreground">{posterName}</span>
         </div>
         <Button
           variant="outline"
