@@ -587,6 +587,33 @@ export const getProfessionalCompletedJobsCount = async (userId) => {
   }
 };
 
+/**
+ * Toggle accepting applications for a job
+ * @param {string} jobId - Job ID
+ * @param {boolean} acceptingApplications - Whether to accept applications
+ * @returns {Promise<{data: Object|null, error: Error|null}>}
+ */
+export const toggleAcceptingApplications = async (jobId, acceptingApplications) => {
+  try {
+    const { data, error } = await supabase
+      .from('jobs')
+      .update({ accepting_applications: acceptingApplications })
+      .eq('id', jobId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error toggling accepting applications:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error in toggleAcceptingApplications:', error);
+    return { data: null, error };
+  }
+};
+
 export default {
   uploadJobImages,
   fetchJobs,
@@ -607,5 +634,6 @@ export default {
   getUserPostedJobs,
   getProfessionalActiveJobs,
   getProfessionalCompletedJobs,
-  getProfessionalCompletedJobsCount
+  getProfessionalCompletedJobsCount,
+  toggleAcceptingApplications
 };

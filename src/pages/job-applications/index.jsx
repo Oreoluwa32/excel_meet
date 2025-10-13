@@ -3,6 +3,8 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import DetailViewModal from '../../components/ui/DetailViewModal';
 import Button from '../../components/ui/Button';
 import { fetchJobApplications, updateApplicationStatus } from '../../utils/applicationService';
+import { fetchJobById, toggleAcceptingApplications } from '../../utils/jobService';
+import { getOrCreateConversation } from '../../utils/messagingService';
 import { useAuth } from '../../contexts/AuthContext';
 
 const JobApplications = () => {
@@ -14,10 +16,12 @@ const JobApplications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [jobData, setJobData] = useState(null);
+  const [togglingApplications, setTogglingApplications] = useState(false);
 
   // Support both location.state (from navigation) and URL query params (from notifications)
   const jobId = location.state?.jobId || searchParams.get('jobId');
-  const jobTitle = location.state?.jobTitle || 'Job';
+  const jobTitle = location.state?.jobTitle || jobData?.title || 'Job';
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -29,8 +33,16 @@ const JobApplications = () => {
 
       try {
         setLoading(true);
-        const { data, error: fetchError } = await fetchJobApplications(jobId);
+        
+        // Fetch job data
+        const { data: job, error: jobError } = await fetchJobById(jobId);
+        if (jobError) {
+          throw jobError;
+        }
+        setJobData(job);
 
+        // Fetch applications
+        const { data, error: fetchError } = await fetchJobApplications(jobId);
         if (fetchError) {
           throw fetchError;
         }
@@ -75,6 +87,59 @@ const JobApplications = () => {
 
   const handleViewProfile = (applicantId) => {
     navigate('/professional-profile', { state: { userId: applicantId } });
+  };
+
+  const handleToggleApplications = async () => {
+    if (!jobData) return;
+
+    try {
+      setTogglingApplications(true);
+      const newStatus = !jobData.accepting_applications;
+      
+      const { error } = await toggleAcceptingApplications(jobId, newStatus);
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setJobData(prev => ({
+        ...prev,
+        accepting_applications: newStatus
+      }));
+
+      alert(newStatus 
+        ? 'Applications are now open for this job.' 
+        : 'Applications are now closed for this job.'
+      );
+    } catch (err) {
+      console.error('Error toggling applications:', err);
+      alert('Failed to update application status. Please try again.');
+    } finally {
+      setTogglingApplications(false);
+    }
+  };
+
+  const handleMessageApplicant = async (applicantId) => {
+    if (!user || !jobData) return;
+
+    try {
+      // Get or create conversation between job poster and applicant
+      const { data: conversationId, error } = await getOrCreateConversation(
+        jobData.id,
+        user.id,
+        applicantId
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      // Navigate to messages page with the conversation
+      navigate('/messages', { state: { conversationId } });
+    } catch (err) {
+      console.error('Error creating conversation:', err);
+      alert('Failed to start conversation. Please try again.');
+    }
   };
 
   const formatTimeAgo = (date) => {
@@ -156,9 +221,42 @@ const JobApplications = () => {
                 {applications.length} {applications.length === 1 ? 'application' : 'applications'}
               </span>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               Review and manage applications for this job posting
             </p>
+            
+            {/* Application Status Toggle */}
+            {jobData && (
+              <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${jobData.accepting_applications ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div>
+                    <p className="font-medium text-foreground">
+                      Applications {jobData.accepting_applications ? 'Open' : 'Closed'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {jobData.accepting_applications 
+                        ? 'Professionals can apply to this job' 
+                        : 'New applications are not being accepted'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={jobData.accepting_applications ? 'outline' : 'default'}
+                  size="sm"
+                  onClick={handleToggleApplications}
+                  disabled={togglingApplications}
+                  iconName={jobData.accepting_applications ? 'Lock' : 'Unlock'}
+                  iconPosition="left"
+                >
+                  {togglingApplications 
+                    ? 'Updating...' 
+                    : jobData.accepting_applications 
+                      ? 'Close Applications' 
+                      : 'Open Applications'}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Applications List */}
@@ -273,6 +371,15 @@ const JobApplications = () => {
                       iconPosition="left"
                     >
                       View Profile
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleMessageApplicant(application.applicant_id)}
+                      iconName="MessageCircle"
+                      iconPosition="left"
+                    >
+                      Message
                     </Button>
                     {application.status === 'pending' && (
                       <>
