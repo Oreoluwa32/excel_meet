@@ -57,7 +57,7 @@ export const getUserConversations = async (userId) => {
         )
       `)
       .or(`participant_1_id.eq.${userId},participant_2_id.eq.${userId}`)
-      .order('last_message_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -95,6 +95,13 @@ export const getUserConversations = async (userId) => {
         lastMessageAt: conv.last_message_at,
         createdAt: conv.created_at
       };
+    });
+
+    // Sort by last_message_at (with null values at the end) or created_at
+    transformedData?.sort((a, b) => {
+      const aTime = a.lastMessageAt || a.createdAt;
+      const bTime = b.lastMessageAt || b.createdAt;
+      return new Date(bTime) - new Date(aTime);
     });
 
     return { data: transformedData, error: null };

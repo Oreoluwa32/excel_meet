@@ -73,6 +73,36 @@ const Messages = () => {
           const conv = data?.find(c => c.id === initialConversationId);
           if (conv) {
             setSelectedConversation(conv);
+          } else {
+            // If conversation not found in list, fetch it directly
+            console.log('Conversation not found in list, fetching directly...');
+            const { data: convDetails, error: convError } = await getConversationDetails(initialConversationId);
+            if (!convError && convDetails) {
+              // Transform to match conversation list format
+              const otherParticipant = convDetails.participant_1_id === user.id 
+                ? convDetails.participant_2 
+                : convDetails.participant_1;
+              
+              const transformedConv = {
+                id: convDetails.id,
+                jobId: convDetails.job_id,
+                jobTitle: convDetails.jobs?.title,
+                jobCategory: convDetails.jobs?.category,
+                otherParticipant: {
+                  id: otherParticipant?.id,
+                  name: otherParticipant?.full_name || 'Unknown User',
+                  avatar: otherParticipant?.avatar_url
+                },
+                lastMessage: null,
+                unreadCount: 0,
+                lastMessageAt: null,
+                createdAt: convDetails.created_at
+              };
+              
+              setSelectedConversation(transformedConv);
+              // Add to conversations list if not already there
+              setConversations(prev => [transformedConv, ...prev]);
+            }
           }
         } else if (data && data.length > 0 && !selectedConversation) {
           // Auto-select first conversation if none selected
