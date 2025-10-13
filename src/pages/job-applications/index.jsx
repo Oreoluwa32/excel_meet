@@ -123,6 +123,12 @@ const JobApplications = () => {
     if (!user || !jobData) return;
 
     try {
+      console.log('🔵 Creating conversation...', {
+        jobId: jobData.id,
+        posterId: user.id,
+        applicantId
+      });
+
       // Get or create conversation between job poster and applicant
       const { data: conversationId, error } = await getOrCreateConversation(
         jobData.id,
@@ -134,10 +140,12 @@ const JobApplications = () => {
         throw error;
       }
 
+      console.log('✅ Conversation created/retrieved:', conversationId);
+
       // Navigate to messages page with the conversation
       navigate('/messages', { state: { conversationId } });
     } catch (err) {
-      console.error('Error creating conversation:', err);
+      console.error('❌ Error creating conversation:', err);
       alert('Failed to start conversation. Please try again.');
     }
   };
