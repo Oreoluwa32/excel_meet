@@ -34,12 +34,13 @@ const authService = {
   signUp: async (email, password, userData = {}) => {
     try {
       console.log('AuthService: Attempting sign up for:', email, 'with metadata:', userData);
+      const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: userData,
-          emailRedirectTo: `${window.location.origin}/email-verified`,
+          emailRedirectTo: `${redirectUrl}/email-verified`,
         },
       });
 
@@ -156,8 +157,9 @@ const authService = {
   // Reset password
   resetPassword: async (email) => {
     try {
+      const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${redirectUrl}/reset-password`,
       });
 
       if (error) {
@@ -191,10 +193,11 @@ const authService = {
   signInWithGoogle: async () => {
     try {
       console.log('AuthService: Attempting Google sign in');
+      const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/home-dashboard`,
+          redirectTo: `${redirectUrl}/home-dashboard`,
         },
       });
 
