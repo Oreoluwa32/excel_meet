@@ -86,7 +86,7 @@ const JobApplications = () => {
   };
 
   const handleViewProfile = (applicantId) => {
-    navigate('/professional-profile', { state: { userId: applicantId } });
+    navigate('/professional-profile', { state: { userId: applicantId, jobId } });
   };
 
   const handleToggleApplications = async () => {

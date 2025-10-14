@@ -519,7 +519,7 @@ const JobDetails = () => {
               <JobGallery images={transformedJobData.images} />
             )}
 
-            <PosterInfo poster={posterData} loading={loadingPoster} />
+            <PosterInfo poster={posterData} loading={loadingPoster} jobId={jobId} />
 
             {/* Ad Banner - Between sections */}
             <AdBanner type="horizontal" className="my-6" />

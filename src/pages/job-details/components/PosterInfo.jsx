@@ -4,12 +4,12 @@ import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const PosterInfo = ({ poster, loading }) => {
+const PosterInfo = ({ poster, loading, jobId }) => {
   const navigate = useNavigate();
 
   const handleViewProfile = () => {
     if (poster?.id) {
-      navigate('/professional-profile', { state: { userId: poster.id } });
+      navigate('/professional-profile', { state: { userId: poster.id, jobId } });
     }
   };
 

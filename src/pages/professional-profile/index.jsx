@@ -17,16 +17,20 @@ import {
   fetchProfessionalCompletedJobs
 } from '../../utils/userService';
 import { fetchUserReviews } from '../../utils/reviewService';
+import { getOrCreateConversation } from '../../utils/messagingService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProfessionalProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [professionalData, setProfessionalData] = useState(null);
   const [error, setError] = useState(null);
   
-  // Get userId from navigation state
+  // Get userId and jobId from navigation state
   const userId = location.state?.userId;
+  const jobId = location.state?.jobId;
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -135,10 +139,44 @@ const ProfessionalProfile = () => {
     fetchProfileData();
   }, [userId]);
 
-  const handleStartChat = () => {
-    console.log('Starting chat with professional:', professionalData.name);
-    // In a real app, this would navigate to chat or open chat modal
-    alert(`Starting chat with ${professionalData.name}. This feature will be implemented in the chat system.`);
+  const handleStartChat = async () => {
+    if (!user || !professionalData) {
+      alert('Please log in to start a chat.');
+      return;
+    }
+
+    // Check if we have a jobId to associate with the conversation
+    if (!jobId) {
+      alert('Please navigate from a job posting to start a conversation about that job.');
+      return;
+    }
+
+    try {
+      console.log('🔵 Creating conversation...', {
+        jobId,
+        currentUserId: user.id,
+        professionalId: professionalData.id
+      });
+
+      // Get or create conversation between current user and professional
+      const { data: conversationId, error } = await getOrCreateConversation(
+        jobId,
+        user.id,
+        professionalData.id
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Conversation created/retrieved:', conversationId);
+
+      // Navigate to messages page with the conversation
+      navigate('/messages', { state: { conversationId } });
+    } catch (err) {
+      console.error('❌ Error creating conversation:', err);
+      alert('Failed to start conversation. Please try again.');
+    }
   };
 
   const handleClose = () => {
