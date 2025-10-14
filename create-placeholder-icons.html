@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Placeholder Icons - Excel Meet</title>
+</head>
+<body>
+    <h1>Generating placeholder icons...</h1>
+    <p>Right-click each image below and "Save As" to your public folder:</p>
+    <div id="icons"></div>
+
+    <script>
+        const sizes = [
+            { size: 192, name: 'icon-192.png', maskable: false },
+            { size: 512, name: 'icon-512.png', maskable: false },
+            { size: 192, name: 'icon-192-maskable.png', maskable: true },
+            { size: 512, name: 'icon-512-maskable.png', maskable: true }
+        ];
+
+        const iconsDiv = document.getElementById('icons');
+
+        sizes.forEach(({ size, name, maskable }) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Calculate text size and position
+            const fontSize = maskable ? size * 0.15 : size * 0.2;
+            const padding = maskable ? size * 0.1 : 0;
+
+            // Draw "EM" text
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('EM', size / 2, size / 2);
+
+            // Draw "Excel Meet" below
+            const smallFontSize = fontSize * 0.3;
+            ctx.font = `${smallFontSize}px Arial`;
+            ctx.fillText('Excel Meet', size / 2, size / 2 + fontSize * 0.8);
+
+            // Convert to image and add to page
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.width = '200px';
+            img.style.margin = '10px';
+            img.style.border = '2px solid #ccc';
+            img.style.borderRadius = '8px';
+            
+            const container = document.createElement('div');
+            container.style.display = 'inline-block';
+            container.style.margin = '10px';
+            container.style.textAlign = 'center';
+            
+            const label = document.createElement('p');
+            label.textContent = name;
+            label.style.fontFamily = 'monospace';
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Download';
+            downloadBtn.style.padding = '8px 16px';
+            downloadBtn.style.margin = '5px';
+            downloadBtn.style.cursor = 'pointer';
+            downloadBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = name;
+                a.click();
+            };
+            
+            container.appendChild(img);
+            container.appendChild(label);
+            container.appendChild(downloadBtn);
+            iconsDiv.appendChild(container);
+        });
+    </script>
+</body>
+</html>

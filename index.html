@@ -6,11 +6,19 @@
   <title>Excel Meet - Connect with Nigerian Professionals</title>
   
   <!-- Viewport & Mobile -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+  
+  <!-- PWA Configuration -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Excel Meet" />
+  <meta name="application-name" content="Excel Meet" />
+  <meta name="msapplication-TileColor" content="#000000" />
+  <meta name="msapplication-tap-highlight" content="no" />
   
   <!-- SEO Meta Tags -->
   <meta name="description" content="Excel Meet is Nigeria's premier platform for connecting professionals, finding opportunities, and building meaningful business relationships." />
@@ -32,7 +40,10 @@
   
   <!-- Icons & Manifest -->
   <link rel="icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
   <link rel="manifest" href="/manifest.json" />
   
   <!-- Preconnect to external domains for performance -->

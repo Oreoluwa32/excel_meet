@@ -4,6 +4,7 @@ import { PreferencesProvider } from "./contexts/PreferencesContext";
 import Routes from "./Routes";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineIndicator from "./components/OfflineIndicator";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { validateEnv } from "./utils/envValidator";
 import { analytics } from "./utils/analytics";
 import { monitorPageLoad } from "./utils/performance";
@@ -41,6 +42,7 @@ function App() {
       <AuthProvider>
         <PreferencesProvider>
           <OfflineIndicator />
+          <PWAInstallPrompt />
           <Routes />
         </PreferencesProvider>
       </AuthProvider>

@@ -27,7 +27,9 @@ export default defineConfig({
           'supabase-vendor': ['@supabase/supabase-js']
         }
       }
-    }
+    },
+    // Copy service worker to build output
+    copyPublicDir: true
   },
   
   // Plugins

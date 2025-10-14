@@ -11,7 +11,7 @@ import SearchHistory from './components/SearchHistory';
 import EmptyState from './components/EmptyState';
 import LoadingState from './components/LoadingState';
 import AdBanner from '../../components/AdBanner';
-import { searchJobs, searchProfessionals } from '../../utils/searchService';
+import { searchJobs, searchProfessionals, saveSearchHistory } from '../../utils/searchService';
 
 const SearchDiscovery = () => {
   const location = useLocation();
@@ -63,6 +63,16 @@ const SearchDiscovery = () => {
           setTotalResults(total);
           setHasMore(more);
           setCurrentPage(page);
+          
+          // Save search to history (only on first page)
+          if (page === 1 && searchQuery.trim()) {
+            saveSearchHistory({
+              query: searchQuery,
+              type: 'jobs',
+              filters: filters,
+              resultsCount: total
+            });
+          }
         }
       } else {
         const { data, error, hasMore: more, total } = await searchProfessionals({
@@ -87,6 +97,16 @@ const SearchDiscovery = () => {
           setTotalResults(total);
           setHasMore(more);
           setCurrentPage(page);
+          
+          // Save search to history (only on first page)
+          if (page === 1 && searchQuery.trim()) {
+            saveSearchHistory({
+              query: searchQuery,
+              type: 'professionals',
+              filters: filters,
+              resultsCount: total
+            });
+          }
         }
       }
     } catch (error) {
@@ -239,7 +259,7 @@ const SearchDiscovery = () => {
             <div className="space-y-6">
               {!showResults ? (
                 // Search History & Trending
-                <SearchHistory onSearchSelect={handleSearchSelect} />
+                <SearchHistory onSearchSelect={handleSearchSelect} activeTab={activeTab} />
               ) : isLoading ? (
                 // Loading State
                 <LoadingState type={activeTab} />

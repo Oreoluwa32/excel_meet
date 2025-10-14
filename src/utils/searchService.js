@@ -413,6 +413,157 @@ export const getLocationSuggestions = async () => {
   }
 };
 
+/**
+ * Save search to history
+ * @param {Object} searchData - Search data to save
+ * @param {string} searchData.query - Search query
+ * @param {string} searchData.type - Search type (jobs or professionals)
+ * @param {Object} searchData.filters - Applied filters
+ * @param {number} searchData.resultsCount - Number of results
+ * @returns {Promise<{error: Error|null}>}
+ */
+export const saveSearchHistory = async (searchData) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { error: new Error('User not authenticated') };
+    }
+
+    const { error } = await supabase
+      .from('search_history')
+      .insert({
+        user_id: user.id,
+        search_query: searchData.query || '',
+        search_type: searchData.type,
+        filters: searchData.filters || {},
+        results_count: searchData.resultsCount || 0
+      });
+
+    if (error) {
+      console.error('Error saving search history:', error);
+      return { error };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error in saveSearchHistory:', error);
+    return { error };
+  }
+};
+
+/**
+ * Get user's recent searches
+ * @param {string} searchType - Optional filter by search type
+ * @param {number} limit - Number of results to return
+ * @returns {Promise<{data: Array, error: Error|null}>}
+ */
+export const getRecentSearches = async (searchType = null, limit = 10) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { data: [], error: null };
+    }
+
+    const { data, error } = await supabase
+      .rpc('get_recent_searches', {
+        p_user_id: user.id,
+        p_search_type: searchType,
+        p_limit: limit
+      });
+
+    if (error) {
+      console.error('Error fetching recent searches:', error);
+      return { data: [], error };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error in getRecentSearches:', error);
+    return { data: [], error };
+  }
+};
+
+/**
+ * Get trending searches
+ * @param {string} searchType - Optional filter by search type
+ * @param {number} limit - Number of results to return
+ * @returns {Promise<{data: Array, error: Error|null}>}
+ */
+export const getTrendingSearches = async (searchType = null, limit = 10) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_trending_searches', {
+        p_search_type: searchType,
+        p_limit: limit
+      });
+
+    if (error) {
+      console.error('Error fetching trending searches:', error);
+      return { data: [], error };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error in getTrendingSearches:', error);
+    return { data: [], error };
+  }
+};
+
+/**
+ * Get popular categories
+ * @param {number} limit - Number of results to return
+ * @returns {Promise<{data: Array, error: Error|null}>}
+ */
+export const getPopularCategories = async (limit = 10) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_popular_categories', {
+        p_limit: limit
+      });
+
+    if (error) {
+      console.error('Error fetching popular categories:', error);
+      return { data: [], error };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error in getPopularCategories:', error);
+    return { data: [], error };
+  }
+};
+
+/**
+ * Clear user's search history
+ * @returns {Promise<{error: Error|null}>}
+ */
+export const clearSearchHistory = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { error: new Error('User not authenticated') };
+    }
+
+    const { error } = await supabase
+      .from('search_history')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error clearing search history:', error);
+      return { error };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error in clearSearchHistory:', error);
+    return { error };
+  }
+};
+
 export default {
   searchJobs,
   searchProfessionals,
@@ -420,5 +571,10 @@ export default {
   getTrendingJobs,
   getJobCategories,
   getAvailableSkills,
-  getLocationSuggestions
+  getLocationSuggestions,
+  saveSearchHistory,
+  getRecentSearches,
+  getTrendingSearches,
+  getPopularCategories,
+  clearSearchHistory
 };

@@ -3,6 +3,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Select from '../../../components/ui/Select';
+import { JOB_CATEGORIES, RATING_OPTIONS, DISTANCE_OPTIONS, SORT_OPTIONS } from '../../../utils/constants';
 
 const FilterPanel = ({ 
   filters, 
@@ -13,41 +14,10 @@ const FilterPanel = ({
   onClear,
   activeTab 
 }) => {
-  const categories = [
-    { value: 'plumbing', label: 'Plumbing' },
-    { value: 'electrical', label: 'Electrical' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'carpentry', label: 'Carpentry' },
-    { value: 'painting', label: 'Painting' },
-    { value: 'landscaping', label: 'Landscaping' },
-    { value: 'hvac', label: 'HVAC' },
-    { value: 'roofing', label: 'Roofing' },
-    { value: 'technology', label: 'Technology' },
-    { value: 'design', label: 'Design' }
-  ];
-
-  const locationOptions = [
-    { value: '5', label: 'Within 5 km' },
-    { value: '10', label: 'Within 10 km' },
-    { value: '25', label: 'Within 25 km' },
-    { value: '50', label: 'Within 50 km' },
-    { value: 'any', label: 'Any distance' }
-  ];
-
-  const ratingOptions = [
-    { value: '4', label: '4+ stars' },
-    { value: '3', label: '3+ stars' },
-    { value: '2', label: '2+ stars' },
-    { value: '1', label: '1+ stars' },
-    { value: 'any', label: 'Any rating' }
-  ];
-
-  const sortOptions = [
-    { value: 'relevance', label: 'Best Match' },
-    { value: 'newest', label: 'Newest First' },
-    { value: 'rating', label: 'Highest Rated' },
-    { value: 'distance', label: 'Nearest' }
-  ];
+  const categories = JOB_CATEGORIES.map(cat => ({ value: cat, label: cat }));
+  const locationOptions = DISTANCE_OPTIONS;
+  const ratingOptions = RATING_OPTIONS;
+  const sortOptions = activeTab === 'jobs' ? SORT_OPTIONS.JOBS : SORT_OPTIONS.PROFESSIONALS;
 
   const handleCategoryChange = (categoryValue, checked) => {
     setFilters(prev => ({
