@@ -140,7 +140,14 @@ const JobApplications = () => {
         throw error;
       }
 
+      if (!conversationId) {
+        throw new Error('No conversation ID returned');
+      }
+
       console.log('✅ Conversation created/retrieved:', conversationId);
+
+      // Small delay to ensure database transaction is committed
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Navigate to messages page with the conversation
       navigate('/messages', { state: { conversationId } });

@@ -38,6 +38,15 @@ const Messages = () => {
 
   // Get conversation ID from navigation state (when coming from job details)
   const initialConversationId = location.state?.conversationId;
+  
+  // Log the initial conversation ID for debugging
+  useEffect(() => {
+    if (initialConversationId) {
+      console.log('🎯 Messages page loaded with conversation ID:', initialConversationId);
+    } else {
+      console.log('📭 Messages page loaded without conversation ID');
+    }
+  }, [initialConversationId]);
 
   // Initialize Pusher on mount
   useEffect(() => {
@@ -61,37 +70,56 @@ const Messages = () => {
       if (!user) return;
 
       setLoading(true);
+      let conversationSelected = false;
+      let retryCount = 0;
+      const maxRetries = 3;
       
       // If we have an initial conversation ID, try to fetch it directly first
       // This ensures we get the conversation even if it was just created
       if (initialConversationId) {
-        console.log('Loading conversation directly:', initialConversationId);
-        const { data: convDetails, error: convError } = await getConversationDetails(initialConversationId);
+        console.log('🔍 Loading conversation directly:', initialConversationId);
         
-        if (!convError && convDetails) {
-          // Transform to match conversation list format
-          const otherParticipant = convDetails.participant_1_id === user.id 
-            ? convDetails.participant_2 
-            : convDetails.participant_1;
+        // Retry logic for newly created conversations
+        while (retryCount < maxRetries && !conversationSelected) {
+          const { data: convDetails, error: convError } = await getConversationDetails(initialConversationId);
           
-          const transformedConv = {
-            id: convDetails.id,
-            jobId: convDetails.job_id,
-            jobTitle: convDetails.jobs?.title,
-            jobCategory: convDetails.jobs?.category,
-            otherParticipant: {
-              id: otherParticipant?.id,
-              name: otherParticipant?.full_name || 'Unknown User',
-              avatar: otherParticipant?.avatar_url
-            },
-            lastMessage: null,
-            unreadCount: 0,
-            lastMessageAt: null,
-            createdAt: convDetails.created_at
-          };
-          
-          console.log('✅ Conversation loaded:', transformedConv);
-          setSelectedConversation(transformedConv);
+          if (convError) {
+            console.error('❌ Error loading conversation details:', convError);
+            break;
+          } else if (convDetails) {
+            // Transform to match conversation list format
+            const otherParticipant = convDetails.participant_1_id === user.id 
+              ? convDetails.participant_2 
+              : convDetails.participant_1;
+            
+            const transformedConv = {
+              id: convDetails.id,
+              jobId: convDetails.job_id,
+              jobTitle: convDetails.jobs?.title,
+              jobCategory: convDetails.jobs?.category,
+              otherParticipant: {
+                id: otherParticipant?.id,
+                name: otherParticipant?.full_name || 'Unknown User',
+                avatar: otherParticipant?.avatar_url
+              },
+              lastMessage: null,
+              unreadCount: 0,
+              lastMessageAt: null,
+              createdAt: convDetails.created_at
+            };
+            
+            console.log('✅ Conversation loaded and selected:', transformedConv);
+            setSelectedConversation(transformedConv);
+            conversationSelected = true;
+            break;
+          } else {
+            console.warn(`⚠️ No conversation details returned for ID (attempt ${retryCount + 1}/${maxRetries}):`, initialConversationId);
+            retryCount++;
+            if (retryCount < maxRetries) {
+              // Wait a bit before retrying
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
         }
       }
       
@@ -99,18 +127,24 @@ const Messages = () => {
       const { data, error } = await getUserConversations(user.id);
       
       if (error) {
-        console.error('Error loading conversations:', error);
+        console.error('❌ Error loading conversations:', error);
       } else {
+        console.log('📋 Loaded conversations:', data?.length || 0);
         setConversations(data || []);
         
         // If we have an initial conversation ID and haven't selected it yet
-        if (initialConversationId && !selectedConversation) {
+        if (initialConversationId && !conversationSelected) {
           const conv = data?.find(c => c.id === initialConversationId);
           if (conv) {
+            console.log('✅ Found conversation in list, selecting:', conv);
             setSelectedConversation(conv);
+            conversationSelected = true;
+          } else {
+            console.warn('⚠️ Conversation not found in list:', initialConversationId);
           }
-        } else if (data && data.length > 0 && !selectedConversation && !initialConversationId) {
+        } else if (data && data.length > 0 && !conversationSelected && !initialConversationId) {
           // Auto-select first conversation if none selected and no initial ID
+          console.log('📌 Auto-selecting first conversation');
           setSelectedConversation(data[0]);
         }
       }
