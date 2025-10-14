@@ -147,7 +147,7 @@ const JobApplications = () => {
       console.log('✅ Conversation created/retrieved:', conversationId);
 
       // Small delay to ensure database transaction is committed
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Navigate to messages page with the conversation
       navigate('/messages', { state: { conversationId } });

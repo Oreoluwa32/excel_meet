@@ -126,6 +126,13 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
                         </button>
                       )}
                       <button
+                        onClick={() => navigate('/my-tickets')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <Icon name="Ticket" size={16} className="inline mr-2" />
+                        My Tickets
+                      </button>
+                      <button
                         onClick={() => navigate('/user-profile-management')}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
@@ -160,8 +167,12 @@ const Header = ({ title, showBack = false, showProfile = true }) => {
         isOpen={showSupportForm}
         onClose={() => setShowSupportForm(false)}
         onSuccess={() => {
-          // You can add a toast notification here
-          alert('Support ticket submitted successfully! We will get back to you soon.');
+          const viewTickets = window.confirm(
+            'Support ticket submitted successfully! We will get back to you soon.\n\nWould you like to view your tickets?'
+          );
+          if (viewTickets) {
+            navigate('/my-tickets');
+          }
         }}
       />
     </header>

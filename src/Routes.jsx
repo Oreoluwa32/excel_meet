@@ -19,6 +19,7 @@ import UserProfileManagement from "pages/user-profile-management";
 import SavedJobs from "pages/saved-jobs";
 import Messages from "pages/messages";
 import AdminDashboard from "pages/admin-dashboard";
+import MyTickets from "pages/my-tickets";
 import NotFound from "pages/NotFound";
 
 // Protected Route Component
@@ -152,6 +153,14 @@ const Routes = () => {
           element={
             <ProtectedRoute>
               <Messages />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/my-tickets" 
+          element={
+            <ProtectedRoute>
+              <MyTickets />
             </ProtectedRoute>
           } 
         />

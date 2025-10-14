@@ -80,7 +80,9 @@ const NotificationBell = () => {
       job_deleted: '🗑️',
       review_received: '⭐',
       message_received: '💬',
-      system_announcement: '📢'
+      system_announcement: '📢',
+      support_response: '💬',
+      support_status_update: '🎫'
     };
     return iconMap[type] || '🔔';
   };
@@ -92,7 +94,9 @@ const NotificationBell = () => {
       application_submitted: 'bg-blue-50 border-blue-200',
       job_deleted: 'bg-red-50 border-red-200',
       review_received: 'bg-yellow-50 border-yellow-200',
-      system_announcement: 'bg-purple-50 border-purple-200'
+      system_announcement: 'bg-purple-50 border-purple-200',
+      support_response: 'bg-blue-50 border-blue-200',
+      support_status_update: 'bg-indigo-50 border-indigo-200'
     };
     return colorMap[type] || 'bg-gray-50 border-gray-200';
   };

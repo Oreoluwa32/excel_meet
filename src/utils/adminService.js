@@ -237,6 +237,30 @@ const adminService = {
   },
 
   /**
+   * Get ticket responses
+   */
+  async getTicketResponses(ticketId) {
+    try {
+      const { data, error } = await supabase
+        .from('ticket_responses')
+        .select(`
+          *,
+          user_profiles!ticket_responses_user_id_fkey(id, full_name, email, avatar_url, role),
+          admin_profiles:user_profiles!ticket_responses_user_id_fkey(id, full_name, email, avatar_url)
+        `)
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error fetching ticket responses:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
    * Add response to support ticket
    */
   async addTicketResponse(ticketId, userId, message, isAdminResponse = false) {
