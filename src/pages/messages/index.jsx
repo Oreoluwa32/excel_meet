@@ -5,6 +5,7 @@ import Header from '../../components/ui/Header';
 import BottomTabNavigation from '../../components/ui/BottomTabNavigation';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
+import ComposeMessageModal from '../../components/ComposeMessageModal';
 import {
   getUserConversations,
   getConversationMessages,
@@ -32,6 +33,7 @@ const Messages = () => {
   const [sending, setSending] = useState(false);
   const [conversationDetails, setConversationDetails] = useState(null);
   const [isPusherConnected, setIsPusherConnected] = useState(false);
+  const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const pusherChannelRef = useRef(null);
   const conversationChannelRef = useRef(null);
@@ -47,6 +49,23 @@ const Messages = () => {
       console.log('📭 Messages page loaded without conversation ID');
     }
   }, []);
+
+  // Handle conversation created from compose modal
+  const handleConversationCreated = async (conversationId) => {
+    console.log('✅ New conversation created:', conversationId);
+    
+    // Reload conversations
+    const { data, error } = await getUserConversations(user.id);
+    if (!error && data) {
+      setConversations(data);
+      
+      // Select the new conversation
+      const newConversation = data.find(c => c.id === conversationId);
+      if (newConversation) {
+        setSelectedConversation(newConversation);
+      }
+    }
+  };
 
   // Initialize Pusher on mount
   useEffect(() => {
