@@ -2,11 +2,16 @@
 -- Location: supabase/migrations/20250202000000_create_admin_system.sql
 
 -- 1. Create ticket status and priority enums
+DROP TYPE IF EXISTS public.ticket_status CASCADE;
+DROP TYPE IF EXISTS public.ticket_priority CASCADE;
+DROP TYPE IF EXISTS public.ticket_category CASCADE;
+
 CREATE TYPE public.ticket_status AS ENUM ('open', 'in_progress', 'resolved', 'closed');
 CREATE TYPE public.ticket_priority AS ENUM ('low', 'medium', 'high', 'urgent');
 CREATE TYPE public.ticket_category AS ENUM ('bug', 'feature_request', 'complaint', 'question', 'other');
 
 -- 2. Create support_tickets table
+DROP TABLE IF EXISTS public.support_tickets CASCADE;
 CREATE TABLE public.support_tickets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.user_profiles(id) ON DELETE CASCADE,
@@ -25,6 +30,7 @@ CREATE TABLE public.support_tickets (
 );
 
 -- 3. Create ticket_responses table
+DROP TABLE IF EXISTS public.ticket_responses CASCADE;
 CREATE TABLE public.ticket_responses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ticket_id UUID REFERENCES public.support_tickets(id) ON DELETE CASCADE,
@@ -36,6 +42,7 @@ CREATE TABLE public.ticket_responses (
 );
 
 -- 4. Create app_analytics table for tracking metrics
+DROP TABLE IF EXISTS public.app_analytics CASCADE;
 CREATE TABLE public.app_analytics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     metric_name TEXT NOT NULL,
@@ -46,6 +53,7 @@ CREATE TABLE public.app_analytics (
 );
 
 -- 5. Create system_logs table
+DROP TABLE IF EXISTS public.system_logs CASCADE;
 CREATE TABLE public.system_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     log_level TEXT NOT NULL, -- 'info', 'warning', 'error', 'critical'
