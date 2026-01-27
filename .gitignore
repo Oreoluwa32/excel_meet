@@ -43,3 +43,5 @@ build
 # Debug
 .vscode/launch.json
 .idea/workspace.xml
+
+.zencoder/
