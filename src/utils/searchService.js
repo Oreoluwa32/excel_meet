@@ -49,8 +49,11 @@ export const searchJobs = async (options = {}) => {
     // Apply search query
     if (query.trim()) {
       const searchTerm = query.trim();
+      const words = searchTerm.split(/\s+/).filter(Boolean);
+      const searchPattern = `%${words.join('%')}%`;
+      
       queryBuilder = queryBuilder.or(
-        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%,state.ilike.%${searchTerm}%`
+        `title.ilike.${searchPattern},description.ilike.${searchPattern},category.ilike.${searchPattern},city.ilike.${searchPattern},state.ilike.${searchPattern}`
       );
     }
 
@@ -176,8 +179,11 @@ export const searchProfessionals = async (options = {}) => {
     // Apply search query
     if (query.trim()) {
       const searchTerm = query.trim();
+      const words = searchTerm.split(/\s+/).filter(Boolean);
+      const searchPattern = `%${words.join('%')}%`;
+
       queryBuilder = queryBuilder.or(
-        `full_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%`
+        `full_name.ilike.${searchPattern},bio.ilike.${searchPattern},location.ilike.${searchPattern}`
       );
     }
 
