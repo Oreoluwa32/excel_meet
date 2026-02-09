@@ -2,12 +2,26 @@
 -- Location: supabase/migrations/20250110085704_excel_meet_auth.sql
 
 -- 1. Create custom types
-CREATE TYPE public.user_role AS ENUM ('admin', 'professional', 'client');
-CREATE TYPE public.verification_status AS ENUM ('pending', 'verified', 'rejected');
-CREATE TYPE public.subscription_plan AS ENUM ('free', 'basic', 'pro', 'elite');
+DO $$ BEGIN
+    CREATE TYPE public.user_role AS ENUM ('admin', 'professional', 'client');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE public.verification_status AS ENUM ('pending', 'verified', 'rejected');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE public.subscription_plan AS ENUM ('free', 'basic', 'pro', 'elite');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- 2. Create user_profiles table (intermediary for auth relationships)
-CREATE TABLE public.user_profiles (
+CREATE TABLE IF NOT EXISTS public.user_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
@@ -26,11 +40,11 @@ CREATE TABLE public.user_profiles (
 );
 
 -- 3. Create essential indexes
-CREATE INDEX idx_user_profiles_email ON public.user_profiles(email);
-CREATE INDEX idx_user_profiles_role ON public.user_profiles(role);
-CREATE INDEX idx_user_profiles_verification_status ON public.user_profiles(verification_status);
-CREATE INDEX idx_user_profiles_subscription_plan ON public.user_profiles(subscription_plan);
-CREATE INDEX idx_user_profiles_location ON public.user_profiles(location);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_role ON public.user_profiles(role);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_verification_status ON public.user_profiles(verification_status);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription_plan ON public.user_profiles(subscription_plan);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_location ON public.user_profiles(location);
 
 -- 4. Enable RLS
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
@@ -41,10 +55,11 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
 SELECT EXISTS (
     SELECT 1 FROM public.user_profiles up
-    WHERE up.id = auth.uid() AND up.role = 'admin'::public.user_role
+    WHERE up.id = (SELECT auth.uid()) AND up.role = 'admin'::public.user_role
 )
 $$;
 
@@ -53,39 +68,56 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
 SELECT EXISTS (
     SELECT 1 FROM public.user_profiles up
-    WHERE up.id = profile_id AND up.id = auth.uid()
+    WHERE up.id = profile_id AND up.id = (SELECT auth.uid())
 )
 $$;
 
 -- 6. Create RLS policies
+-- Cleanup old policies to avoid multiple permissive policies warnings
+DROP POLICY IF EXISTS "admins_can_manage_all_profiles" ON public.user_profiles;
+DROP POLICY IF EXISTS "users_can_view_profiles" ON public.user_profiles;
+DROP POLICY IF EXISTS "users_can_create_profiles" ON public.user_profiles;
+DROP POLICY IF EXISTS "users_can_update_profiles" ON public.user_profiles;
+DROP POLICY IF EXISTS "users_can_delete_profiles" ON public.user_profiles;
+
+DROP POLICY IF EXISTS "users_can_view_all_profiles" ON public.user_profiles;
 CREATE POLICY "users_can_view_all_profiles"
 ON public.user_profiles
 FOR SELECT
 TO authenticated
 USING (true);
 
-CREATE POLICY "users_can_manage_own_profile"
+DROP POLICY IF EXISTS "users_can_manage_own_profile" ON public.user_profiles;
+-- Consolidate policies by separating actions to avoid multiple permissive policies for SELECT
+CREATE POLICY "users_can_manage_own_profile_insert"
 ON public.user_profiles
-FOR ALL
+FOR INSERT
 TO authenticated
-USING (public.is_profile_owner(id))
-WITH CHECK (public.is_profile_owner(id));
+WITH CHECK (public.is_profile_owner(id) OR public.is_admin());
 
-CREATE POLICY "admins_can_manage_all_profiles"
+CREATE POLICY "users_can_manage_own_profile_update"
 ON public.user_profiles
-FOR ALL
+FOR UPDATE
 TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+USING (public.is_profile_owner(id) OR public.is_admin())
+WITH CHECK (public.is_profile_owner(id) OR public.is_admin());
+
+CREATE POLICY "users_can_manage_own_profile_delete"
+ON public.user_profiles
+FOR DELETE
+TO authenticated
+USING (public.is_profile_owner(id) OR public.is_admin());
 
 -- 7. Create function for automatic profile creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
-SECURITY DEFINER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
     INSERT INTO public.user_profiles (
@@ -105,6 +137,7 @@ END;
 $$;
 
 -- 8. Create trigger for new user creation
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -113,6 +146,7 @@ CREATE TRIGGER on_auth_user_created
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
@@ -121,6 +155,7 @@ END;
 $$;
 
 -- 10. Create trigger for updated_at
+DROP TRIGGER IF EXISTS update_user_profiles_updated_at ON public.user_profiles;
 CREATE TRIGGER update_user_profiles_updated_at
     BEFORE UPDATE ON public.user_profiles
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -191,6 +226,7 @@ CREATE OR REPLACE FUNCTION public.cleanup_test_data()
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     auth_user_ids_to_delete UUID[];

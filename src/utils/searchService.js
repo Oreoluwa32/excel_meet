@@ -43,13 +43,14 @@ export const searchJobs = async (options = {}) => {
     // Build base query
     let queryBuilder = supabase
       .from('jobs')
-      .select('*, user_profiles!jobs_user_id_fkey(full_name, avatar_url)', { count: 'exact' })
+      .select('*, user_profiles(full_name, avatar_url)', { count: 'exact' })
       .eq('status', 'open');
 
     // Apply search query
     if (query.trim()) {
+      const searchTerm = query.trim();
       queryBuilder = queryBuilder.or(
-        `title.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%,city.ilike.%${query}%,state.ilike.%${query}%`
+        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%,state.ilike.%${searchTerm}%`
       );
     }
 
@@ -168,20 +169,23 @@ export const searchProfessionals = async (options = {}) => {
       .from('user_profiles')
       .select(`
         *,
-        reviews:reviews!reviews_reviewed_user_id_fkey(rating)
+        reviews:reviews!reviewee_id(rating)
       `, { count: 'exact' })
       .eq('role', 'professional');
 
     // Apply search query
     if (query.trim()) {
+      const searchTerm = query.trim();
       queryBuilder = queryBuilder.or(
-        `full_name.ilike.%${query}%,bio.ilike.%${query}%,location.ilike.%${query}%`
+        `full_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%`
       );
     }
 
     // Apply skills filter
     if (skills.length > 0) {
-      queryBuilder = queryBuilder.overlaps('skills', skills);
+      // Search in both skills and service_categories arrays
+      const skillsLiteral = `{${skills.join(',')}}`;
+      queryBuilder = queryBuilder.or(`skills.ov.${skillsLiteral},service_categories.ov.${skillsLiteral}`);
     }
 
     // Apply location filters
@@ -395,7 +399,7 @@ export const getLocationSuggestions = async () => {
       .eq('status', 'open');
 
     if (jobsError) {
-      console.error('Error fetching location suggestions:', error);
+      console.error('Error fetching location suggestions:', jobsError);
       return { data: { states: [], cities: [] }, error: jobsError };
     }
 

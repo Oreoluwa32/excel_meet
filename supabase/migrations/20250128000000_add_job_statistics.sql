@@ -7,6 +7,7 @@ RETURNS INTEGER
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT COUNT(*)::INTEGER
     FROM public.jobs
@@ -19,6 +20,7 @@ RETURNS INTEGER
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT COUNT(*)::INTEGER
     FROM public.jobs
@@ -32,6 +34,7 @@ RETURNS INTEGER
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT COUNT(*)::INTEGER
     FROM public.jobs
@@ -68,6 +71,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT 
         j.id,
@@ -127,6 +131,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT 
         j.id,
@@ -191,6 +196,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT 
         j.id,
@@ -231,6 +237,7 @@ RETURNS INTEGER
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT COUNT(*)::INTEGER
     FROM public.jobs j

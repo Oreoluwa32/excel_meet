@@ -114,6 +114,7 @@ RETURNS SETOF public.jobs
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT *
     FROM public.jobs

@@ -89,33 +89,28 @@ ALTER TABLE public.app_analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_logs ENABLE ROW LEVEL SECURITY;
 
 -- 8. Create RLS policies for support_tickets
+DROP POLICY IF EXISTS "admins_can_manage_all_tickets" ON public.support_tickets;
 CREATE POLICY "users_can_view_own_tickets"
 ON public.support_tickets
 FOR SELECT
 TO authenticated
-USING (user_id = auth.uid() OR public.is_admin());
+USING (user_id = (SELECT auth.uid()) OR public.is_admin());
 
 CREATE POLICY "users_can_create_tickets"
 ON public.support_tickets
 FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid());
+WITH CHECK (user_id = (SELECT auth.uid()) OR public.is_admin());
 
 CREATE POLICY "users_can_update_own_tickets"
 ON public.support_tickets
 FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid())
-WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY "admins_can_manage_all_tickets"
-ON public.support_tickets
-FOR ALL
-TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
+USING (user_id = (SELECT auth.uid()) OR public.is_admin())
+WITH CHECK (user_id = (SELECT auth.uid()) OR public.is_admin());
 
 -- 9. Create RLS policies for ticket_responses
+DROP POLICY IF EXISTS "admins_can_manage_all_responses" ON public.ticket_responses;
 CREATE POLICY "users_can_view_responses_for_their_tickets"
 ON public.ticket_responses
 FOR SELECT
@@ -123,7 +118,7 @@ TO authenticated
 USING (
     EXISTS (
         SELECT 1 FROM public.support_tickets st
-        WHERE st.id = ticket_id AND (st.user_id = auth.uid() OR public.is_admin())
+        WHERE st.id = ticket_id AND (st.user_id = (SELECT auth.uid()) OR public.is_admin())
     )
 );
 
@@ -134,44 +129,25 @@ TO authenticated
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM public.support_tickets st
-        WHERE st.id = ticket_id AND st.user_id = auth.uid()
-    ) OR public.is_admin()
+        WHERE st.id = ticket_id AND (st.user_id = (SELECT auth.uid()) OR public.is_admin())
+    )
 );
 
-CREATE POLICY "admins_can_manage_all_responses"
-ON public.ticket_responses
-FOR ALL
-TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
-
 -- 10. Create RLS policies for app_analytics (admin only)
+DROP POLICY IF EXISTS "admins_can_manage_analytics" ON public.app_analytics;
 CREATE POLICY "admins_can_view_analytics"
 ON public.app_analytics
 FOR SELECT
 TO authenticated
 USING (public.is_admin());
 
-CREATE POLICY "admins_can_manage_analytics"
-ON public.app_analytics
-FOR ALL
-TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
-
 -- 11. Create RLS policies for system_logs (admin only)
+DROP POLICY IF EXISTS "admins_can_manage_logs" ON public.system_logs;
 CREATE POLICY "admins_can_view_logs"
 ON public.system_logs
 FOR SELECT
 TO authenticated
 USING (public.is_admin());
-
-CREATE POLICY "admins_can_manage_logs"
-ON public.system_logs
-FOR ALL
-TO authenticated
-USING (public.is_admin())
-WITH CHECK (public.is_admin());
 
 -- 12. Create triggers for updated_at
 CREATE TRIGGER update_support_tickets_updated_at
@@ -182,6 +158,8 @@ CREATE TRIGGER update_support_tickets_updated_at
 CREATE OR REPLACE FUNCTION public.update_ticket_timestamps()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
     IF NEW.status = 'resolved' AND OLD.status != 'resolved' THEN
@@ -201,7 +179,9 @@ CREATE TRIGGER update_ticket_status_timestamps
     FOR EACH ROW EXECUTE FUNCTION public.update_ticket_timestamps();
 
 -- 14. Create view for admin dashboard statistics
-CREATE OR REPLACE VIEW public.admin_dashboard_stats AS
+CREATE OR REPLACE VIEW public.admin_dashboard_stats 
+WITH (security_invoker = true)
+AS
 SELECT
     (SELECT COUNT(*) FROM public.user_profiles) as total_users,
     (SELECT COUNT(*) FROM public.user_profiles WHERE role = 'professional') as total_professionals,
@@ -232,6 +212,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public
 AS $$
     SELECT
         d.date_series::DATE as activity_date,
