@@ -43,7 +43,7 @@ export const searchJobs = async (options = {}) => {
     // Build base query
     let queryBuilder = supabase
       .from('jobs')
-      .select('*, user_profiles(full_name, avatar_url)', { count: 'exact' })
+      .select('*, user_profiles!user_id(full_name, avatar_url)', { count: 'exact' })
       .eq('status', 'open');
 
     // Apply search query
@@ -315,7 +315,7 @@ export const getTrendingJobs = async (limit = 10) => {
   try {
     const { data, error } = await supabase
       .from('jobs')
-      .select('*, user_profiles!jobs_user_id_fkey(full_name, avatar_url)')
+      .select('*, user_profiles!user_id(full_name, avatar_url)')
       .eq('status', 'open')
       .in('urgency', ['urgent', 'high'])
       .order('created_at', { ascending: false })
