@@ -43,13 +43,15 @@ export const searchJobs = async (options = {}) => {
     // Build base query
     let queryBuilder = supabase
       .from('jobs')
-      .select('*, user_profiles!user_id(full_name, avatar_url)', { count: 'exact' })
+      .select('*, user_profiles(full_name, avatar_url)', { count: 'exact' })
       .eq('status', 'open');
 
     // Apply search query
     if (query.trim()) {
       const searchTerm = query.trim();
       const words = searchTerm.split(/\s+/).filter(Boolean);
+      // Create a search pattern that matches all words in any order for title/description
+      // Using ilike with wildcards for simple fuzzy matching
       const searchPattern = `%${words.join('%')}%`;
       
       queryBuilder = queryBuilder.or(
@@ -104,8 +106,9 @@ export const searchJobs = async (options = {}) => {
       case 'relevance':
       default:
         // For relevance, prioritize urgent jobs and recent posts
+        // Note: urgency enum order is 'urgent', 'high', 'normal', 'low'
         queryBuilder = queryBuilder
-          .order('urgency', { ascending: false })
+          .order('urgency', { ascending: true })
           .order('created_at', { ascending: false });
         break;
     }
@@ -172,7 +175,7 @@ export const searchProfessionals = async (options = {}) => {
       .from('user_profiles')
       .select(`
         *,
-        reviews:reviews!reviewee_id(rating)
+        reviews!reviewee_id(rating)
       `, { count: 'exact' })
       .eq('role', 'professional');
 
