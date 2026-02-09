@@ -65,9 +65,10 @@ const BottomTabNavigation = () => {
 
   return (
     <>
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border lg:hidden">
-        <div className="flex items-center justify-around h-16 px-4">
+      {/* Navigation - Fixed at bottom for both mobile and desktop */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border shadow-md">
+        {/* Mobile View */}
+        <div className="lg:hidden flex items-center justify-around h-16 px-4">
           {tabs.map((tab) => {
             const isActive = location.pathname === tab.path;
             
@@ -101,11 +102,9 @@ const BottomTabNavigation = () => {
             );
           })}
         </div>
-      </nav>
 
-      {/* Desktop Top Navigation */}
-      <nav className="hidden lg:block sticky top-16 left-0 right-0 z-40 bg-card border-b border-border">
-        <div className="flex items-center justify-center h-12 px-6">
+        {/* Desktop View */}
+        <div className="hidden lg:flex items-center justify-center h-16 px-6">
           <div className="flex items-center space-x-8">
             {tabs.map((tab) => {
               const isActive = location.pathname === tab.path;

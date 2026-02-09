@@ -78,12 +78,6 @@ const ProfessionalCard = ({ professional }) => {
             <span>{professional.location}</span>
           </div>
         )}
-        <div className="flex items-center space-x-2 text-sm">
-          <Icon name="Briefcase" size={14} className="text-muted-foreground" />
-          <span className="text-sm text-muted-foreground capitalize">
-            {professional.subscription_plan || 'free'} plan
-          </span>
-        </div>
       </div>
 
       {skills.length > 0 && (

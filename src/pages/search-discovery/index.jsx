@@ -171,7 +171,7 @@ const SearchDiscovery = () => {
   const hasResults = searchResults.length > 0;
 
   return (
-    <div className="min-h-screen bg-background pt-16 lg:pt-28 pb-20 lg:pb-8">
+    <div className="min-h-screen bg-background pt-16 lg:pt-28 pb-20">
       <div className="max-w-7xl mx-auto px-4 lg:px-6">
         {/* Back Button */}
         <div className="mb-4">
