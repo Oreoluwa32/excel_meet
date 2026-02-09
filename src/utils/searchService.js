@@ -175,7 +175,7 @@ export const searchProfessionals = async (options = {}) => {
       .from('user_profiles')
       .select(`
         *,
-        reviews!reviewee_id(rating)
+        reviews:reviews!reviews_reviewee_id_fkey(rating)
       `, { count: 'exact' })
       .eq('role', 'professional');
 
