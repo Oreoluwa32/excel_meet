@@ -11,6 +11,7 @@ import SearchHistory from './components/SearchHistory';
 import EmptyState from './components/EmptyState';
 import LoadingState from './components/LoadingState';
 import AdBanner from '../../components/AdBanner';
+import BottomTabNavigation from '../../components/ui/BottomTabNavigation';
 import { searchJobs, searchProfessionals, saveSearchHistory } from '../../utils/searchService';
 
 const SearchDiscovery = () => {
@@ -324,6 +325,8 @@ const SearchDiscovery = () => {
         onClear={handleClearFilters}
         activeTab={activeTab}
       />
+      
+      <BottomTabNavigation />
     </div>
   );
 };
