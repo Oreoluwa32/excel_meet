@@ -50,9 +50,10 @@ export const searchJobs = async (options = {}) => {
     if (query.trim()) {
       const searchTerm = query.trim();
       const words = searchTerm.split(/\s+/).filter(Boolean);
-      // Create a search pattern that matches all words in any order for title/description
-      // Using ilike with wildcards for simple fuzzy matching
-      const searchPattern = `%${words.join('%')}%`;
+      
+      // For more robust search, we use a single pattern with multiple wildcards
+      // But we should quote the value to handle spaces and special characters in PostgREST
+      const searchPattern = `"%${words.join('%')}%"`;
       
       queryBuilder = queryBuilder.or(
         `title.ilike.${searchPattern},description.ilike.${searchPattern},category.ilike.${searchPattern},city.ilike.${searchPattern},state.ilike.${searchPattern}`
@@ -175,7 +176,7 @@ export const searchProfessionals = async (options = {}) => {
       .from('user_profiles')
       .select(`
         *,
-        reviews:reviews!reviews_reviewee_id_fkey(rating)
+        reviews:reviews!reviewee_id(rating)
       `, { count: 'exact' })
       .eq('role', 'professional');
 
@@ -183,7 +184,8 @@ export const searchProfessionals = async (options = {}) => {
     if (query.trim()) {
       const searchTerm = query.trim();
       const words = searchTerm.split(/\s+/).filter(Boolean);
-      const searchPattern = `%${words.join('%')}%`;
+      // Quote the pattern to handle spaces and special characters in PostgREST
+      const searchPattern = `"%${words.join('%')}%"`;
 
       queryBuilder = queryBuilder.or(
         `full_name.ilike.${searchPattern},bio.ilike.${searchPattern},location.ilike.${searchPattern}`
@@ -193,7 +195,11 @@ export const searchProfessionals = async (options = {}) => {
     // Apply skills filter
     if (skills.length > 0) {
       // Search in both skills and service_categories arrays
-      const skillsLiteral = `{${skills.join(',')}}`;
+      // Properly quote elements with spaces for Postgres array literal
+      const formattedSkills = skills.map(skill => 
+        skill.includes(' ') ? `"${skill}"` : skill
+      );
+      const skillsLiteral = `{${formattedSkills.join(',')}}`;
       queryBuilder = queryBuilder.or(`skills.ov.${skillsLiteral},service_categories.ov.${skillsLiteral}`);
     }
 
