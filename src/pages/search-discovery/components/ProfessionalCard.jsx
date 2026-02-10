@@ -61,7 +61,6 @@ const ProfessionalCard = ({ professional }) => {
               <Icon name="BadgeCheck" size={16} className="text-primary" />
             )}
           </div>
-          <p className="text-sm text-muted-foreground mb-2">{professional.role || 'Professional'}</p>
           <div className="flex items-center space-x-1 mb-2">
             {renderStars(rating)}
             <span className="text-sm text-muted-foreground ml-1">
