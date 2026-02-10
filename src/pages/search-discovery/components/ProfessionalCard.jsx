@@ -1,18 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
+import { getOrCreateConversation } from '../../../utils/messagingService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const ProfessionalCard = ({ professional }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   const handleViewProfile = () => {
     navigate('/professional-profile', { state: { userId: professional.id } });
   };
 
-  const handleChat = () => {
-    console.log('Chat with professional:', professional.id);
+  const handleChat = async () => {
+    if (!user) {
+      navigate('/login-register');
+      return;
+    }
+
+    if (isStartingChat) return;
+
+    try {
+      setIsStartingChat(true);
+      // We use a null jobId when starting a chat directly from search discovery
+      // since there isn't necessarily a specific job being discussed yet
+      const { data: conversationId, error } = await getOrCreateConversation(
+        null, 
+        user.id,
+        professional.id
+      );
+
+      if (error) throw error;
+
+      if (conversationId) {
+        navigate('/messages', { state: { conversationId } });
+      }
+    } catch (err) {
+      console.error('Error starting chat:', err);
+      alert('Failed to start chat. Please try again.');
+    } finally {
+      setIsStartingChat(false);
+    }
   };
 
   const renderStars = (rating) => {
@@ -110,6 +141,7 @@ const ProfessionalCard = ({ professional }) => {
           variant="default"
           size="sm"
           onClick={handleChat}
+          loading={isStartingChat}
           iconName="MessageCircle"
           iconPosition="left"
           iconSize={14}

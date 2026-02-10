@@ -38,11 +38,6 @@ const ProfileHeader = ({ professional }) => {
                   {professional.title}
                 </p>
               </div>
-              {professional.isPremium && (
-                <div className="bg-warning/10 text-warning px-2 py-1 rounded-full text-xs font-medium">
-                  Premium
-                </div>
-              )}
             </div>
 
             {/* Location */}
