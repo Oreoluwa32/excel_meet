@@ -11,11 +11,11 @@ console.log('Supabase Configuration:', {
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables!');
-  throw new Error('Missing Supabase environment variables');
 }
 
 // Safely get storage
 const getStorage = () => {
+  if (typeof window === 'undefined') return null;
   try {
     // Check if sessionStorage is available and working
     const storage = window.sessionStorage;
@@ -40,13 +40,24 @@ const getStorage = () => {
   }
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: getStorage(),
-  }
-});
+export const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storage: getStorage(),
+      }
+    })
+  : {
+      auth: {
+        getSession: async () => ({ data: { session: null } }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        signInWithPassword: async () => ({ error: { message: 'Supabase not configured' } }),
+      },
+      from: () => ({
+        select: () => ({ eq: () => ({ single: async () => ({ error: { message: 'Supabase not configured' } }) }) })
+      })
+    };
 
 console.log('Supabase client initialized successfully');

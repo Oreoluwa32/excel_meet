@@ -62,8 +62,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network first strategy for API calls
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
+  // Network first strategy for index.html and API calls
+  if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
     event.respondWith(
       fetch(request)
         .then((response) => {

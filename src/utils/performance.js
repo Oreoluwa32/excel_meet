@@ -107,28 +107,28 @@ export const memoize = (fn) => {
  * Monitor page load performance
  */
 export const monitorPageLoad = () => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !window.performance) return;
 
   window.addEventListener('load', () => {
-    // Use Performance API to get metrics
-    const perfData = window.performance.timing;
-    const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-    const connectTime = perfData.responseEnd - perfData.requestStart;
-    const renderTime = perfData.domComplete - perfData.domLoading;
+    try {
+      // Use Performance API to get metrics
+      const perfData = window.performance.timing;
+      if (!perfData) return;
 
-    logger.info('Page Load Performance', {
-      pageLoadTime: `${pageLoadTime}ms`,
-      connectTime: `${connectTime}ms`,
-      renderTime: `${renderTime}ms`
-    });
+      const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+      const connectTime = perfData.responseEnd - perfData.requestStart;
+      const renderTime = perfData.domComplete - perfData.domLoading;
 
-    // Send to analytics if available
-    if (window.gtag && import.meta.env.VITE_ENABLE_ANALYTICS === 'true') {
-      window.gtag('event', 'timing_complete', {
-        name: 'page_load',
-        value: pageLoadTime,
-        event_category: 'Performance'
-      });
+      // Only log if we have valid numbers
+      if (!isNaN(pageLoadTime) && pageLoadTime > 0) {
+        logger.info('Page Load Performance', {
+          pageLoadTime: `${pageLoadTime}ms`,
+          connectTime: `${connectTime}ms`,
+          renderTime: `${renderTime}ms`
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to collect performance metrics:', e);
     }
   });
 };

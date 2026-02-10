@@ -13,28 +13,36 @@ import { logger } from "./utils/logger";
 
 function App() {
   useEffect(() => {
-    try {
-      // Validate environment variables
-      validateEnv();
-
-      // Initialize analytics
-      analytics.initialize();
-
-      // Monitor performance
-      monitorPageLoad();
-
-      // Security checks
-      preventClickjacking();
-
-      logger.info('Application initialized successfully');
-    } catch (error) {
-      logger.error('Application initialization failed', error);
-      
-      // Show user-friendly error if critical env vars are missing
-      if (error.message.includes('environment variables')) {
-        alert(error.message);
+    // Sequential initialization with individual try-catches
+    const init = () => {
+      try {
+        validateEnv();
+      } catch (e) {
+        console.error('Env validation failed:', e);
       }
-    }
+
+      try {
+        analytics.initialize();
+      } catch (e) {
+        console.error('Analytics init failed:', e);
+      }
+
+      try {
+        monitorPageLoad();
+      } catch (e) {
+        console.error('Performance monitoring failed:', e);
+      }
+
+      try {
+        preventClickjacking();
+      } catch (e) {
+        console.error('Security check failed:', e);
+      }
+
+      logger.info('Application initialization attempt finished');
+    };
+
+    init();
   }, []);
 
   return (

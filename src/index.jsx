@@ -10,6 +10,12 @@ const root = createRoot(container);
 
 root.render(<App />);
 
+// Clear the initial loading spinner once React takes over
+const initialLoader = document.getElementById('initial-loading');
+if (initialLoader) {
+  initialLoader.remove();
+}
+
 // Register service worker for PWA functionality
 serviceWorkerRegistration.register({
   onSuccess: (registration) => {

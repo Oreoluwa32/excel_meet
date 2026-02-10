@@ -90,7 +90,42 @@
       </div>
     </div>
   </noscript>
-  <div class="dhiwise-code" id="root"></div>
+  <div class="dhiwise-code" id="root">
+    <div id="initial-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif;">
+      <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <p style="margin-top: 15px; color: #666;">Loading Excel Meet...</p>
+      <style>
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      </style>
+      <script>
+        // If JS fails to clear this in 10 seconds, show a manual refresh button
+        var loadTimer = setTimeout(function() {
+          var loader = document.getElementById('initial-loading');
+          if (loader) {
+            loader.innerHTML += '<div style="margin-top: 20px; text-align: center;"><button onclick="forceRecovery()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Force App Reset</button><p style="font-size: 12px; color: #999; margin-top: 10px;">This will clear local app data and reload.</p></div>';
+            console.log("Initial loading taking too long...");
+          }
+        }, 8000);
+
+        function forceRecovery() {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for(var registration of registrations) {
+                registration.unregister();
+              }
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload(true);
+            });
+          } else {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.reload(true);
+          }
+        }
+      </script>
+    </div>
+  </div>
   <script type="module" src="/src/index.jsx"></script>
 </body>
 
