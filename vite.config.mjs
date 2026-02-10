@@ -8,15 +8,10 @@ export default defineConfig({
   // Build configuration
   build: {
     outDir: "build",
+    target: 'es2018',
     chunkSizeWarningLimit: 2000,
     sourcemap: false, // Disable sourcemaps in production for security
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.logs in production
-        drop_debugger: true
-      }
-    },
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -38,8 +33,7 @@ export default defineConfig({
     react({
       // Enable Fast Refresh
       fastRefresh: true
-    }), 
-    tagger()
+    })
   ],
   
   // Development server
@@ -47,7 +41,6 @@ export default defineConfig({
     port: 4028,
     host: "0.0.0.0",
     strictPort: true,
-    allowedHosts: ['.amazonaws.com', '.builtwithrocket.new'],
     open: false, // Don't auto-open browser
     cors: true
   },

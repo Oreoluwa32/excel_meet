@@ -59,8 +59,25 @@
   <meta http-equiv="X-Frame-Options" content="DENY" />
   <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  
-  <script type="module" src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fexcelmeet8537back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.5"></script>
+  <script>
+    // Global error handler for debugging blank screens
+    window.onerror = function(msg, url, line, col, error) {
+      var errorMsg = "Error: " + msg + "\nURL: " + url + "\nLine: " + line;
+      console.error(errorMsg);
+      // Only alert in development or if specifically needed for debugging
+      if (window.location.hostname === 'localhost' || window.location.hostname.match(/^192\.168\./)) {
+        alert("Application Error Detected:\n" + errorMsg);
+      }
+      return false;
+    };
+    window.onunhandledrejection = function(event) {
+      var errorMsg = "Unhandled Rejection: " + event.reason;
+      console.error(errorMsg);
+      if (window.location.hostname === 'localhost' || window.location.hostname.match(/^192\.168\./)) {
+        alert(errorMsg);
+      }
+    };
+  </script>
 </head>
 
 <body>

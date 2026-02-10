@@ -41,10 +41,10 @@ export const validateEnv = () => {
   });
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables:\n${missing.join('\n')}\n\n` +
-      'Please check your .env file and ensure all required variables are set.'
-    );
+    const errorMsg = `Missing required environment variables:\n${missing.join('\n')}\n\nPlease check your .env file.`;
+    console.error(errorMsg);
+    // Don't throw, just return false so the app can handle it or show a warning
+    return false;
   }
 
   if (warnings.length > 0 && import.meta.env.DEV) {
