@@ -78,7 +78,7 @@ export const getUserConversations = async (userId) => {
       return {
         id: conv.id,
         jobId: conv.job_id,
-        jobTitle: conv.jobs?.title,
+        jobTitle: conv.jobs?.title || 'Direct Message',
         jobCategory: conv.jobs?.category,
         otherParticipant: {
           id: otherParticipant?.id,

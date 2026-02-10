@@ -137,7 +137,7 @@ BEGIN
   -- Try to find existing conversation
   SELECT id INTO v_conversation_id
   FROM conversations
-  WHERE job_id = p_job_id
+  WHERE (job_id IS NULL AND p_job_id IS NULL OR job_id = p_job_id)
     AND participant_1_id = v_participant_1
     AND participant_2_id = v_participant_2;
 

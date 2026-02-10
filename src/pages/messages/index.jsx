@@ -115,7 +115,7 @@ const Messages = () => {
             const transformedConv = {
               id: convDetails.id,
               jobId: convDetails.job_id,
-              jobTitle: convDetails.jobs?.title,
+              jobTitle: convDetails.jobs?.title || 'Direct Message',
               jobCategory: convDetails.jobs?.category,
               otherParticipant: {
                 id: otherParticipant?.id,
@@ -396,7 +396,7 @@ const Messages = () => {
         </div>
         
         <p className="text-sm text-gray-600 truncate mb-1">
-          {conversation.jobTitle}
+          {conversation.jobTitle || 'Direct Message'}
         </p>
         
         {conversation.lastMessage && (
@@ -540,20 +540,22 @@ const Messages = () => {
                         {selectedConversation.otherParticipant.name}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {selectedConversation.jobTitle}
+                        {selectedConversation.jobTitle || 'Direct Message'}
                       </p>
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/job-details', { 
-                      state: { jobId: selectedConversation.jobId } 
-                    })}
-                  >
-                    View Job
-                  </Button>
+                  {selectedConversation.jobId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/job-details', { 
+                        state: { jobId: selectedConversation.jobId } 
+                      })}
+                    >
+                      View Job
+                    </Button>
+                  )}
                 </div>
 
                 {/* Messages */}
