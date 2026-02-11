@@ -12,6 +12,7 @@
   align-items: center;
   justify-content: space-between;
 }
+.stream-chat-container {
   --str-chat__primary-color: #2563eb; /* blue-600 */
   --str-chat__active-primary-color: #1d4ed8; /* blue-700 */
   --str-chat__surface-color: #ffffff;
