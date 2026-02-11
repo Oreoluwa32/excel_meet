@@ -1,5 +1,6 @@
 import { StreamChat } from 'stream-chat';
 import { supabase } from './supabase';
+import { fetchUserProfile } from './userService';
 
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
@@ -92,18 +93,46 @@ export const disconnectStreamUser = async () => {
  * @returns {Promise<Channel>} The Stream Chat channel
  */
 export const getOrCreateChannel = async (otherUserId, jobId = null) => {
+  console.log('🏗️ Attempting to get/create channel with:', otherUserId);
   const client = getStreamClient();
-  if (!client || !client.userID) return null;
+  if (!client || !client.userID) {
+    console.error('❌ Stream client not initialized or user not connected');
+    return null;
+  }
 
-  // Create a channel ID based on participants to ensure uniqueness for 1:1
-  const members = [client.userID, otherUserId].sort();
-  const channelId = `chat-${members.join('-')}${jobId ? `-${jobId}` : ''}`.substring(0, 64);
+  try {
+    // Check if the other user exists in Stream, if not, upsert them
+    console.log('🔍 Checking if user exists in Stream:', otherUserId);
+    const userResponse = await client.queryUsers({ id: { $in: [otherUserId] } });
+    
+    if (userResponse.users.length === 0) {
+      console.log('👤 User not found in Stream, syncing from Supabase...');
+      const { data: profile } = await fetchUserProfile(otherUserId);
+      if (profile) {
+        await client.upsertUser({
+          id: otherUserId,
+          name: profile.full_name || 'User',
+          image: profile.avatar_url || null,
+        });
+        console.log('✅ User synced to Stream');
+      } else {
+        console.warn('⚠️ Could not find user profile in Supabase to sync');
+      }
+    }
 
-  const channel = client.channel('messaging', channelId, {
-    members: [client.userID, otherUserId],
-    job_id: jobId,
-  });
+    // For 1:1 messaging, it's often better to let Stream generate the ID 
+    console.log('📡 Initializing channel...');
+    const channel = client.channel('messaging', {
+      members: [client.userID, otherUserId],
+      job_id: jobId,
+    });
 
-  await channel.watch();
-  return channel;
+    console.log('👀 Watching channel...');
+    await channel.watch();
+    console.log('✅ Channel ready:', channel.id);
+    return channel;
+  } catch (err) {
+    console.error('❌ Error creating/watching channel:', err);
+    return null;
+  }
 };

@@ -72,11 +72,12 @@ const Messages = () => {
         <Chat client={chatClient} theme="str-chat__theme-light">
           <div className="flex h-full overflow-hidden bg-white shadow-sm rounded-lg border border-gray-200">
             <div className="w-full lg:w-96 border-r border-gray-200">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+              <div className="stream-chat-header">
                 <h2 className="font-semibold text-gray-900">Chats</h2>
                 <button
                   onClick={() => setIsComposeModalOpen(true)}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="New Message"
                 >
                   <Icon name="SquareEdit" size={20} />
                 </button>

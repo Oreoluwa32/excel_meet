@@ -1,5 +1,17 @@
-/* Custom Stream Chat styles to match Excel Meet theme */
-.stream-chat-container {
+/* Hide Stream's default header if it exists */
+.str-chat__channel-list-messenger__header {
+  display: none !important;
+}
+
+/* Ensure our custom header is visible and clean */
+.stream-chat-header {
+  padding: 1rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
   --str-chat__primary-color: #2563eb; /* blue-600 */
   --str-chat__active-primary-color: #1d4ed8; /* blue-700 */
   --str-chat__surface-color: #ffffff;
