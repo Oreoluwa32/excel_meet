@@ -15,7 +15,7 @@ export const subscribeToConversationMessages = (conversationId, onNewMessage) =>
     return null;
   }
 
-  const channelName = `conversation-${conversationId}`;
+  const channelName = `chat-${conversationId}`;
   const channel = subscribeToChannel(channelName);
 
   if (channel) {
@@ -70,7 +70,7 @@ export const subscribeToUserConversations = (userId, onUpdate) => {
  * @param {string} conversationId - The conversation ID
  */
 export const unsubscribeFromConversationMessages = (conversationId) => {
-  const channelName = `conversation-${conversationId}`;
+  const channelName = `chat-${conversationId}`;
   unsubscribeFromChannel(channelName);
 };
 
