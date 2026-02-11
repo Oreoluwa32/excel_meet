@@ -4,7 +4,7 @@ import Button from './ui/Button';
 import Input from './ui/Input';
 import Icon from './AppIcon';
 import { searchUsers } from '../utils/userService';
-import { getOrCreateConversation } from '../utils/messagingService';
+import { getOrCreateChannel } from '../utils/streamClient';
 
 export const ComposeMessageModal = ({ isOpen, onClose, onConversationCreated, currentUserId }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,17 +34,12 @@ export const ComposeMessageModal = ({ isOpen, onClose, onConversationCreated, cu
 
     setCreating(true);
     // Start a direct conversation (jobId is null)
-    const { data: conversationId, error } = await getOrCreateConversation(
-      null,
-      currentUserId,
-      selectedUser.id
-    );
+    const channel = await getOrCreateChannel(selectedUser.id);
 
-    if (error) {
-      console.error('Error creating conversation:', error);
+    if (!channel) {
       alert('Failed to start conversation. Please try again.');
-    } else if (conversationId) {
-      onConversationCreated(conversationId);
+    } else {
+      onConversationCreated(channel.id);
       handleClose();
     }
     setCreating(false);

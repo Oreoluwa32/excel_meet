@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import authService from "../utils/authService";
+import { connectStreamUser, disconnectStreamUser } from "../utils/streamClient";
 
 const AuthContext = createContext();
 
@@ -33,6 +34,8 @@ export function AuthProvider({ children }) {
 
           if (profileResult?.success && isMounted) {
             setUserProfile(profileResult.data);
+            // Connect to Stream Chat
+            connectStreamUser(authUser, profileResult.data);
           } else if (isMounted) {
             setAuthError(profileResult?.error || "Failed to load user profile");
           }
@@ -66,6 +69,8 @@ export function AuthProvider({ children }) {
         authService.getUserProfile(session.user.id).then((profileResult) => {
           if (profileResult?.success && isMounted) {
             setUserProfile(profileResult.data);
+            // Connect to Stream Chat
+            connectStreamUser(session.user, profileResult.data);
           } else if (isMounted) {
             setAuthError(profileResult?.error || "Failed to load user profile");
           }
@@ -73,6 +78,8 @@ export function AuthProvider({ children }) {
       } else if (event === "SIGNED_OUT") {
         setUser(null);
         setUserProfile(null);
+        // Disconnect from Stream Chat
+        disconnectStreamUser();
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         setUser(session.user);
       }

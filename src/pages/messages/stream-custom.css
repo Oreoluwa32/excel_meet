@@ -1,0 +1,40 @@
+/* Custom Stream Chat styles to match Excel Meet theme */
+.stream-chat-container {
+  --str-chat__primary-color: #2563eb; /* blue-600 */
+  --str-chat__active-primary-color: #1d4ed8; /* blue-700 */
+  --str-chat__surface-color: #ffffff;
+  --str-chat__secondary-surface-color: #f9fafb;
+  --str-chat__primary-surface-color: #eff6ff;
+}
+
+/* Fix ChannelList height */
+.str-chat-channel-list {
+  height: calc(100% - 65px) !important;
+}
+
+/* Make it look like the original app */
+.str-chat__channel-list-messenger {
+  background: white;
+}
+
+.str-chat__channel-preview-messenger {
+  border-left: 4px solid transparent;
+}
+
+.str-chat__channel-preview-messenger--active {
+  background: #eff6ff !important;
+  border-left-color: #2563eb !important;
+}
+
+.str-chat__message-bubble {
+  border-radius: 1rem !important;
+}
+
+.str-chat__message--me .str-chat__message-bubble {
+  background-color: #2563eb !important;
+}
+
+.str-chat__message-input {
+  background: white !important;
+  border-top: 1px solid #e5e7eb !important;
+}
