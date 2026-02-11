@@ -13,8 +13,13 @@ let chatClient = null;
  * @returns {StreamChat} The chat client instance
  */
 export const getStreamClient = () => {
-  if (!chatClient && STREAM_API_KEY) {
-    chatClient = StreamChat.getInstance(STREAM_API_KEY);
+  if (!chatClient) {
+    if (STREAM_API_KEY) {
+      chatClient = StreamChat.getInstance(STREAM_API_KEY);
+      console.log('📡 Stream Chat client instance created');
+    } else {
+      console.error('❌ Stream API Key (VITE_STREAM_API_KEY) is missing');
+    }
   }
   return chatClient;
 };
@@ -41,11 +46,13 @@ export const connectStreamUser = async (user, profile = null) => {
 
   try {
     // 1. Fetch token from Supabase Edge Function
+    console.log('🎟️ Fetching Stream token for user:', user.id);
     const { data, error } = await supabase.functions.invoke('stream-token', {
       body: { user_id: user.id }
     });
 
     if (error || !data?.token) {
+      console.error('❌ Supabase function error:', error);
       throw new Error(error?.message || 'Failed to get Stream token');
     }
 

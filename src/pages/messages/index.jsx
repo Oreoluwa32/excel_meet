@@ -26,13 +26,30 @@ const Messages = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
+  const [chatReady, setChatReady] = useState(false);
   const chatClient = getStreamClient();
+
+  useEffect(() => {
+    if (chatClient?.userID) {
+      setChatReady(true);
+      return;
+    }
+
+    const checkConnection = setInterval(() => {
+      if (chatClient?.userID) {
+        setChatReady(true);
+        clearInterval(checkConnection);
+      }
+    }, 500);
+
+    return () => clearInterval(checkConnection);
+  }, [chatClient]);
 
   const filters = { members: { $in: [user?.id] }, type: 'messaging' };
   const sort = { last_message_at: -1 };
   const options = { state: true, presence: true, limit: 10 };
 
-  if (!chatClient || !chatClient.userID) {
+  if (!chatReady || !chatClient || !chatClient.userID) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header title="Messages" showBack={false} />
