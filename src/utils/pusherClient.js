@@ -7,8 +7,8 @@ import Pusher from 'pusher-js';
  * 1. Sign up at https://pusher.com (free tier available)
  * 2. Create a new app in Pusher dashboard
  * 3. Copy your credentials and add them to .env file:
- *    REACT_APP_PUSHER_KEY=your_key_here
- *    REACT_APP_PUSHER_CLUSTER=your_cluster_here (e.g., 'us2', 'eu', 'ap1')
+ *    VITE_PUSHER_KEY=your_key_here
+ *    VITE_PUSHER_CLUSTER=your_cluster_here (e.g., 'us2', 'eu', 'ap1')
  */
 
 let pusherInstance = null;

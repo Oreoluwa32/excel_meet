@@ -5,7 +5,7 @@ import Header from '../../components/ui/Header';
 import BottomTabNavigation from '../../components/ui/BottomTabNavigation';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
-import ComposeMessageModal from '../../components/ComposeMessageModal';
+import { ComposeMessageModal } from '../../components/ComposeMessageModal';
 import {
   getUserConversations,
   getConversationMessages,
@@ -517,8 +517,21 @@ const Messages = () => {
           {/* Conversations List */}
           <div className={`${
             selectedConversation ? 'hidden lg:block' : 'block'
-          } w-full lg:w-96 bg-white border-r border-gray-200 overflow-y-auto`}>
-            {conversations.length === 0 ? (
+          } w-full lg:w-96 bg-white border-r border-gray-200 flex flex-col`}>
+            {/* Conversations Header */}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+              <h2 className="font-semibold text-gray-900">Chats</h2>
+              <button
+                onClick={() => setIsComposeModalOpen(true)}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                title="New Message"
+              >
+                <Icon name="SquareEdit" size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <Icon name="MessageCircle" size={48} className="text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No messages yet</h3>
@@ -540,6 +553,7 @@ const Messages = () => {
                 ))}
               </div>
             )}
+          </div>
           </div>
 
           {/* Messages Area */}
@@ -662,6 +676,13 @@ const Messages = () => {
       </div>
 
       <BottomTabNavigation />
+
+      <ComposeMessageModal
+        isOpen={isComposeModalOpen}
+        onClose={() => setIsComposeModalOpen(false)}
+        onConversationCreated={handleConversationCreated}
+        currentUserId={user?.id}
+      />
     </div>
   );
 };
