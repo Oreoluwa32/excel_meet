@@ -46,10 +46,21 @@ export const connectStreamUser = async (user, profile = null) => {
   }
 
   try {
-    // 1. Fetch token from Supabase Edge Function
-    console.log('🎟️ Fetching Stream token for user:', user.id);
+    // 1. Fetch token and sync user via Supabase Edge Function
+    console.log('🎟️ Syncing user and fetching Stream token:', user.id);
+    
+    // Prepare user data for syncing
+    const userData = {
+      name: profile?.full_name || user.email?.split('@')[0] || 'User',
+      image: profile?.avatar_url || null,
+      email: user.email,
+    };
+
     const { data, error } = await supabase.functions.invoke('stream-token', {
-      body: { user_id: user.id }
+      body: { 
+        user_id: user.id,
+        user_data: userData
+      }
     });
 
     if (error || !data?.token) {
@@ -57,16 +68,8 @@ export const connectStreamUser = async (user, profile = null) => {
       throw new Error(error?.message || 'Failed to get Stream token');
     }
 
-    // 2. Prepare user data
-    const userData = {
-      id: user.id,
-      name: profile?.full_name || user.email?.split('@')[0] || 'User',
-      image: profile?.avatar_url || null,
-      email: user.email,
-    };
-
-    // 3. Connect user
-    await client.connectUser(userData, data.token);
+    // 2. Connect user (using the same data we sent to the server)
+    await client.connectUser({ id: user.id, ...userData }, data.token);
     
     console.log('✅ Connected to Stream Chat as:', userData.name);
     return client.user;
@@ -106,13 +109,19 @@ export const getOrCreateChannel = async (otherUserId, jobId = null) => {
     const userResponse = await client.queryUsers({ id: { $in: [otherUserId] } });
     
     if (userResponse.users.length === 0) {
-      console.log('👤 User not found in Stream, syncing from Supabase...');
+      console.log('👤 User not found in Stream, syncing from Supabase via Edge Function...');
       const { data: profile } = await fetchUserProfile(otherUserId);
+      
       if (profile) {
-        await client.upsertUser({
-          id: otherUserId,
-          name: profile.full_name || 'User',
-          image: profile.avatar_url || null,
+        // Sync the user using the server-side client via the Edge Function
+        await supabase.functions.invoke('stream-token', {
+          body: { 
+            sync_users: [{
+              id: otherUserId,
+              name: profile.full_name || 'User',
+              image: profile.avatar_url || null,
+            }]
+          }
         });
         console.log('✅ User synced to Stream');
       } else {

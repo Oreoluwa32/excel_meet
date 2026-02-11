@@ -18,19 +18,32 @@ serve(async (req) => {
 
   try {
     const serverClient = StreamChat.getInstance(STREAM_API_KEY!, STREAM_SECRET_KEY!)
-    const { user_id } = await req.json()
+    const { user_id, user_data, sync_users } = await req.json()
 
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: 'user_id is required' }), {
+    if (!user_id && !sync_users) {
+      return new Response(JSON.stringify({ error: 'user_id or sync_users is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    // Create token for the user
-    const token = serverClient.createToken(user_id)
+    // Upsert the current user if data provided
+    if (user_id && user_data) {
+      await serverClient.upsertUser({
+        id: user_id,
+        ...user_data
+      })
+    }
 
-    return new Response(JSON.stringify({ token }), {
+    // Sync other users if provided
+    if (sync_users && Array.isArray(sync_users)) {
+      await serverClient.upsertUsers(sync_users)
+    }
+
+    // Create token for the user if user_id provided
+    const token = user_id ? serverClient.createToken(user_id) : null
+
+    return new Response(JSON.stringify({ token, success: true }), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
