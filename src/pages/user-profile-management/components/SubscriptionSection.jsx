@@ -4,77 +4,80 @@ import { Crown, Check, X } from 'lucide-react';
 import { initializeSubscription, cancelSubscription, recordPayment, updateUserSubscription } from '../../../utils/paystackService';
 import { useAuth } from '../../../contexts/AuthContext';
 
+const plans = {
+  free: {
+    name: 'Free',
+    price: '₦0',
+    amount: 0,
+    planCode: null,
+    features: [
+      'Basic job search',
+      'Limited job applications (5/week)',
+      'Basic profile',
+      'View ads',
+    ],
+    limitations: [
+      'No priority support',
+      'Limited search filters',
+      'Basic messaging',
+    ],
+  },
+  basic: {
+    name: 'Basic',
+    price: '₦4,000/month',
+    amount: 4000,
+    planCode: 'PLN_c8ju4nnjje9jwg9',
+    features: [
+      'Enhanced job search',
+      'Unlimited job applications',
+      'Ad-free experience',
+      'Priority customer support',
+      'Enhanced search filters',
+    ],
+    limitations: [
+      'Limited premium features',
+    ],
+  },
+  pro: {
+    name: 'Pro',
+    price: '₦8,000/month',
+    amount: 8000,
+    planCode: 'PLN_i6ijfhscu3l8v3k',
+    features: [
+      'Everything in Basic',
+      'Access to premium professionals',
+      'Early job alerts',
+      'Advanced analytics',
+      'Profile verification badge',
+      'Priority job listings',
+    ],
+    limitations: [],
+  },
+  elite: {
+    name: 'Elite',
+    price: '₦16,000/month',
+    amount: 16000,
+    planCode: 'PLN_vg7iryponce5mbt',
+    features: [
+      'Everything in Pro',
+      'Dedicated account manager',
+      'Custom integrations',
+      'Advanced reporting',
+      'API access',
+      'White-label options',
+    ],
+    limitations: [],
+  },
+};
+
 const SubscriptionSection = ({ userProfile }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [processingPlan, setProcessingPlan] = useState(null);
-  const currentPlan = userProfile?.subscription_tier || 'free';
-
-  const plans = {
-    free: {
-      name: 'Free',
-      price: '₦0',
-      amount: 0,
-      planCode: null,
-      features: [
-        'Basic job search',
-        'Limited job applications (5/week)',
-        'Basic profile',
-        'View ads',
-      ],
-      limitations: [
-        'No priority support',
-        'Limited search filters',
-        'Basic messaging',
-      ],
-    },
-    basic: {
-      name: 'Basic',
-      price: '₦4,000/month',
-      amount: 4000,
-      planCode: 'PLN_c8ju4nnjje9jwg9',
-      features: [
-        'Enhanced job search',
-        'Unlimited job applications',
-        'Ad-free experience',
-        'Priority customer support',
-        'Enhanced search filters',
-      ],
-      limitations: [
-        'Limited premium features',
-      ],
-    },
-    pro: {
-      name: 'Pro',
-      price: '₦8,000/month',
-      amount: 8000,
-      planCode: 'PLN_i6ijfhscu3l8v3k',
-      features: [
-        'Everything in Basic',
-        'Access to premium professionals',
-        'Early job alerts',
-        'Advanced analytics',
-        'Profile verification badge',
-        'Priority job listings',
-      ],
-      limitations: [],
-    },
-    elite: {
-      name: 'Elite',
-      price: '₦16,000/month',
-      amount: 16000,
-      planCode: 'PLN_vg7iryponce5mbt',
-      features: [
-        'Everything in Pro',
-        'Dedicated account manager',
-        'Custom integrations',
-        'Advanced reporting',
-        'API access',
-        'White-label options',
-      ],
-      limitations: [],
-    },
-  };
+  
+  const isExpired = userProfile?.subscription_end_date && new Date(userProfile.subscription_end_date) < new Date();
+  const effectivePlan = (isExpired || !userProfile?.subscription_tier) ? 'free' : userProfile.subscription_tier;
+  const currentPlanDetails = plans[effectivePlan];
 
   const handleUpgrade = async (planKey) => {
     const plan = plans[planKey];
@@ -173,8 +176,6 @@ const SubscriptionSection = ({ userProfile }) => {
     }
   };
 
-  const currentPlanDetails = plans[currentPlan];
-
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
@@ -216,16 +217,16 @@ const SubscriptionSection = ({ userProfile }) => {
         </div>
       </div>
 
-      {/* Available Plans */}
-      {currentPlan !== 'elite' && (
+      {/* Available Plans - Only show if current plan is free or expired */}
+      {effectivePlan === 'free' && (
         <div className="space-y-4">
           <h4 className="text-md font-semibold text-gray-900 mb-4">
-            Upgrade Your Plan
+            {isExpired ? 'Renew or Upgrade Your Plan' : 'Upgrade Your Plan'}
           </h4>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Object.entries(plans)
-              .filter(([key]) => key !== currentPlan && key !== 'free')
+              .filter(([key]) => key !== 'free')
               .map(([key, plan]) => (
                 <div key={key} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="text-center mb-3">
@@ -261,18 +262,25 @@ const SubscriptionSection = ({ userProfile }) => {
         </div>
       )}
 
-      {/* Billing Info */}
-      {currentPlan !== 'free' && userProfile?.subscription_end_date && (
+      {/* Billing Info - Show if they have/had a paid plan */}
+      {userProfile?.subscription_tier && userProfile.subscription_tier !== 'free' && userProfile?.subscription_end_date && (
         <div className="mt-6 pt-6 border-t">
-          {userProfile.subscription_status === 'cancelled' && (
+          {userProfile.subscription_status === 'cancelled' && !isExpired && (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                <strong>Subscription Cancelled:</strong> You will retain access to {currentPlanDetails?.name} features until your subscription expires.
+                <strong>Subscription Cancelled:</strong> You will retain access to {plans[userProfile.subscription_tier]?.name} features until your subscription expires.
+              </p>
+            </div>
+          )}
+          {isExpired && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800">
+                <strong>Subscription Expired:</strong> Your {plans[userProfile.subscription_tier]?.name} subscription expired on {new Date(userProfile.subscription_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.
               </p>
             </div>
           )}
           <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>{userProfile.subscription_status === 'cancelled' ? 'Access expires on:' : 'Next billing date:'}</span>
+            <span>{isExpired ? 'Expired on:' : (userProfile.subscription_status === 'cancelled' ? 'Access expires on:' : 'Next billing date:')}</span>
             <span>{new Date(userProfile.subscription_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
           </div>
           <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
@@ -282,18 +290,19 @@ const SubscriptionSection = ({ userProfile }) => {
           <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
             <span>Status:</span>
             <span className={`capitalize ${
+              isExpired ? 'text-red-600' :
               userProfile.subscription_status === 'active' ? 'text-green-600' : 
               userProfile.subscription_status === 'cancelled' ? 'text-yellow-600' : 
               'text-gray-600'
             }`}>
-              {userProfile.subscription_status === 'cancelled' ? 'Cancelled (Active until expiry)' : userProfile.subscription_status || 'Active'}
+              {isExpired ? 'Expired' : (userProfile.subscription_status === 'cancelled' ? 'Cancelled (Active until expiry)' : userProfile.subscription_status || 'Active')}
             </span>
           </div>
         </div>
       )}
 
-      {/* Cancel Subscription */}
-      {currentPlan !== 'free' && userProfile?.subscription_status !== 'cancelled' && (
+      {/* Cancel Subscription - Only show if active and not expired */}
+      {effectivePlan !== 'free' && userProfile?.subscription_status !== 'cancelled' && (
         <div className="mt-6 pt-6 border-t">
           <Button
             variant="ghost"
