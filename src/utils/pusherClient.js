@@ -18,8 +18,8 @@ export const initializePusher = () => {
     return pusherInstance;
   }
 
-  const pusherKey = process.env.REACT_APP_PUSHER_KEY;
-  const pusherCluster = process.env.REACT_APP_PUSHER_CLUSTER || 'us2';
+  const pusherKey = import.meta.env.VITE_PUSHER_KEY;
+  const pusherCluster = import.meta.env.VITE_PUSHER_CLUSTER || 'us2';
 
   if (!pusherKey) {
     console.warn('Pusher key not found. Real-time messaging will use polling fallback.');

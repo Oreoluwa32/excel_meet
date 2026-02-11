@@ -11,7 +11,9 @@ import {
   getConversationMessages,
   sendMessage,
   markMessagesAsRead,
-  getConversationDetails
+  getConversationDetails,
+  subscribeToMessages,
+  subscribeToConversations
 } from '../../utils/messagingService';
 import {
   subscribeToConversationMessages,
@@ -222,9 +224,28 @@ const Messages = () => {
     loadDetails();
   }, [selectedConversation]);
 
-  // Subscribe to new messages (Pusher or polling fallback)
+  // Subscribe to new messages (Pusher -> Supabase Realtime -> Polling)
   useEffect(() => {
     if (!selectedConversation) return;
+
+    let supabaseSubscription = null;
+
+    const handleNewMessage = async (newMessage) => {
+      console.log('📨 New message received:', newMessage);
+      
+      // Add new message to list
+      setMessages(prev => {
+        // Avoid duplicates if both Pusher and Supabase trigger
+        if (prev.find(m => m.id === newMessage.id)) return prev;
+        return [...prev, newMessage];
+      });
+      scrollToBottom();
+      
+      // Mark as read if not sent by current user
+      if (newMessage.senderId !== user.id) {
+        await markMessagesAsRead(selectedConversation.id, user.id);
+      }
+    };
 
     if (isPusherConnected) {
       // Use Pusher for real-time updates
@@ -232,18 +253,7 @@ const Messages = () => {
       
       pusherChannelRef.current = subscribeToConversationMessages(
         selectedConversation.id,
-        async (newMessage) => {
-          console.log('📨 New message received:', newMessage);
-          
-          // Add new message to list
-          setMessages(prev => [...prev, newMessage]);
-          scrollToBottom();
-          
-          // Mark as read if not sent by current user
-          if (newMessage.senderId !== user.id) {
-            await markMessagesAsRead(selectedConversation.id, user.id);
-          }
-        }
+        handleNewMessage
       );
 
       return () => {
@@ -253,7 +263,15 @@ const Messages = () => {
         }
       };
     } else {
-      // Fallback to polling if Pusher not available
+      // Fallback to Supabase Realtime
+      console.log('📡 Subscribing to Supabase Realtime for messages:', selectedConversation.id);
+      
+      supabaseSubscription = subscribeToMessages(
+        selectedConversation.id,
+        handleNewMessage
+      );
+
+      // Final fallback to polling as safety net
       const pollInterval = setInterval(async () => {
         const { data } = await getConversationMessages(selectedConversation.id);
         if (data && data.length > messages.length) {
@@ -261,15 +279,30 @@ const Messages = () => {
           scrollToBottom();
           await markMessagesAsRead(selectedConversation.id, user.id);
         }
-      }, 3000);
+      }, 5000); // Polling slower if Realtime is active
 
-      return () => clearInterval(pollInterval);
+      return () => {
+        if (supabaseSubscription) {
+          supabaseSubscription.unsubscribe();
+        }
+        clearInterval(pollInterval);
+      };
     }
   }, [selectedConversation, user, messages.length, isPusherConnected]);
 
-  // Subscribe to conversation updates (Pusher or polling fallback)
+  // Subscribe to conversation updates (Pusher -> Supabase Realtime -> Polling)
   useEffect(() => {
     if (!user) return;
+
+    let supabaseSubscription = null;
+
+    const handleConversationUpdate = async () => {
+      console.log('🔄 Conversation list updated');
+      const { data } = await getUserConversations(user.id);
+      if (data) {
+        setConversations(data);
+      }
+    };
 
     if (isPusherConnected) {
       // Use Pusher for real-time conversation updates
@@ -277,13 +310,7 @@ const Messages = () => {
       
       conversationChannelRef.current = subscribeToUserConversations(
         user.id,
-        async () => {
-          console.log('🔄 Conversation list updated');
-          const { data } = await getUserConversations(user.id);
-          if (data) {
-            setConversations(data);
-          }
-        }
+        handleConversationUpdate
       );
 
       return () => {
@@ -293,15 +320,23 @@ const Messages = () => {
         }
       };
     } else {
-      // Fallback to polling if Pusher not available
-      const pollInterval = setInterval(async () => {
-        const { data } = await getUserConversations(user.id);
-        if (data) {
-          setConversations(data);
-        }
-      }, 5000);
+      // Fallback to Supabase Realtime
+      console.log('📡 Subscribing to Supabase Realtime for user conversations:', user.id);
+      
+      supabaseSubscription = subscribeToConversations(
+        user.id,
+        handleConversationUpdate
+      );
 
-      return () => clearInterval(pollInterval);
+      // Final fallback to polling
+      const pollInterval = setInterval(handleConversationUpdate, 10000);
+
+      return () => {
+        if (supabaseSubscription) {
+          supabaseSubscription.unsubscribe();
+        }
+        clearInterval(pollInterval);
+      };
     }
   }, [user, isPusherConnected]);
 

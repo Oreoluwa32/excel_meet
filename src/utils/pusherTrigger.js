@@ -11,7 +11,7 @@
 
 import { supabase } from './supabase';
 
-const EDGE_FUNCTION_URL = process.env.REACT_APP_PUSHER_WEBHOOK_URL;
+const EDGE_FUNCTION_URL = import.meta.env.VITE_PUSHER_WEBHOOK_URL;
 
 /**
  * Trigger a new message event
