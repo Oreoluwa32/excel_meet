@@ -45,6 +45,11 @@
 
 .str-chat__message--me .str-chat__message-bubble {
   background-color: #2563eb !important;
+  color: white !important;
+}
+
+.str-chat__message--me .str-chat__message-text-inner {
+  color: white !important;
 }
 
 .str-chat__message-input {

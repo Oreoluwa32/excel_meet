@@ -1,26 +1,37 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 import { useAuth } from "./contexts/AuthContext";
-// Add your imports here
-import Landing from "pages/landing";
-import LoginRegister from "pages/login-register";
-import ForgotPassword from "pages/forgot-password";
-import ResetPassword from "pages/reset-password";
-import EmailVerified from "pages/email-verified";
-import JobDetails from "pages/job-details";
-import JobApplications from "pages/job-applications";
-import Notifications from "pages/notifications";
-import ProfessionalProfile from "pages/professional-profile";
-import HomeDashboard from "pages/home-dashboard";
-import SearchDiscovery from "pages/search-discovery";
-import UserProfileManagement from "pages/user-profile-management";
-import SavedJobs from "pages/saved-jobs";
-import Messages from "pages/messages";
-import AdminDashboard from "pages/admin-dashboard";
-import MyTickets from "pages/my-tickets";
-import NotFound from "pages/NotFound";
+
+// Lazy load pages for better performance
+const Landing = lazy(() => import("pages/landing"));
+const LoginRegister = lazy(() => import("pages/login-register"));
+const ForgotPassword = lazy(() => import("pages/forgot-password"));
+const ResetPassword = lazy(() => import("pages/reset-password"));
+const EmailVerified = lazy(() => import("pages/email-verified"));
+const JobDetails = lazy(() => import("pages/job-details"));
+const JobApplications = lazy(() => import("pages/job-applications"));
+const Notifications = lazy(() => import("pages/notifications"));
+const ProfessionalProfile = lazy(() => import("pages/professional-profile"));
+const HomeDashboard = lazy(() => import("pages/home-dashboard"));
+const SearchDiscovery = lazy(() => import("pages/search-discovery"));
+const UserProfileManagement = lazy(() => import("pages/user-profile-management"));
+const SavedJobs = lazy(() => import("pages/saved-jobs"));
+const Messages = lazy(() => import("pages/messages"));
+const AdminDashboard = lazy(() => import("pages/admin-dashboard"));
+const MyTickets = lazy(() => import("pages/my-tickets"));
+const NotFound = lazy(() => import("pages/NotFound"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 font-medium">Loading page...</p>
+    </div>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -75,7 +86,8 @@ const Routes = () => {
     <BrowserRouter>
       <ErrorBoundary>
       <ScrollToTop />
-      <RouterRoutes>
+      <Suspense fallback={<PageLoader />}>
+        <RouterRoutes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login-register" element={<LoginRegister />} />
@@ -176,6 +188,7 @@ const Routes = () => {
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
+      </Suspense>
       </ErrorBoundary>
     </BrowserRouter>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import DetailViewModal from '../../components/ui/DetailViewModal';
 import Button from '../../components/ui/Button';
+import Image from '../../components/AppImage';
 import { fetchJobApplications, updateApplicationStatus } from '../../utils/applicationService';
 import { fetchJobById, toggleAcceptingApplications } from '../../utils/jobService';
 import { getOrCreateConversation } from '../../utils/messagingService';
@@ -299,7 +300,7 @@ const JobApplications = () => {
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         {application.applicant?.avatar_url ? (
-                          <img
+                          <Image
                             src={application.applicant.avatar_url}
                             alt={application.applicant.full_name}
                             className="w-12 h-12 rounded-full object-cover"

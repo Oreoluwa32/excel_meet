@@ -17,9 +17,11 @@ export default defineConfig({
         manualChunks: {
           // Split vendor chunks for better caching
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react'],
+          'ui-vendor': ['framer-motion', 'lucide-react', 'class-variance-authority', 'clsx', 'tailwind-merge'],
           'data-vendor': ['d3', 'recharts'],
-          'supabase-vendor': ['@supabase/supabase-js']
+          'supabase-vendor': ['@supabase/supabase-js'],
+          'utils-vendor': ['axios', 'date-fns', 'react-hook-form'],
+          'messaging-vendor': ['pusher-js', 'stream-chat', 'stream-chat-react']
         }
       }
     },
