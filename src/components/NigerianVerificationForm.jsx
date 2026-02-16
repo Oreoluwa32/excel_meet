@@ -17,6 +17,8 @@ const NigerianVerificationForm = () => {
   const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [state, setState] = useState('');
+  const [ninFile, setNinFile] = useState(null);
+  const [ninFilePreview, setNinFilePreview] = useState(null);
   
   // UI state
   const [loading, setLoading] = useState(false);
@@ -90,6 +92,10 @@ const NigerianVerificationForm = () => {
         setError('Please enter a valid 11-digit NIN');
         return false;
       }
+      if (!ninFile) {
+        setError('Please upload a clear image of your NIN document');
+        return false;
+      }
     } else if (verificationType === 'BVN') {
       if (!validateBVN(verificationId)) {
         setError('Please enter a valid 11-digit BVN');
@@ -123,21 +129,29 @@ const NigerianVerificationForm = () => {
       let result;
       
       if (verificationType === 'NIN') {
-        result = await submitNINVerification(verificationId, userData);
+        result = await submitNINVerification(verificationId, ninFile, userData);
         if (result.success) {
-          setNinStatus({ status: 'pending' });
+          if (result.verified) {
+            setNinStatus({ status: 'verified' });
+            setSuccess('NIN verified successfully!');
+          } else {
+            setNinStatus({ status: 'rejected', failure_reason: result.error });
+            setError(result.error);
+          }
         }
       } else if (verificationType === 'BVN') {
         result = await submitBVNVerification(verificationId, userData);
         if (result.success) {
           setBvnStatus({ status: 'pending' });
+          setSuccess(result.message || 'BVN verification submitted successfully');
         }
       }
       
-      if (result.success) {
-        setSuccess(result.message || 'Verification submitted successfully');
+      if (result.success && result.verified) {
         setVerificationId('');
-      } else {
+        setNinFile(null);
+        setNinFilePreview(null);
+      } else if (!result.success) {
         setError(result.error || 'Verification submission failed');
       }
     } catch (error) {
@@ -154,6 +168,8 @@ const NigerianVerificationForm = () => {
       return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Verified</span>;
     } else if (status === 'pending') {
       return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>;
+    } else if (status === 'rejected') {
+      return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>;
     } else {
       return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Not Submitted</span>;
     }
@@ -226,19 +242,48 @@ const NigerianVerificationForm = () => {
             </div>
           </div>
           
-          {(verificationType === 'NIN' && ninStatus.status === 'pending') || 
+          {(verificationType === 'NIN' && (ninStatus.status === 'pending' || ninStatus.status === 'rejected')) || 
            (verificationType === 'BVN' && bvnStatus.status === 'pending') ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <div className={`rounded-md p-4 ${
+              (verificationType === 'NIN' && ninStatus.status === 'rejected') 
+                ? 'bg-red-50 border border-red-200' 
+                : 'bg-yellow-50 border border-yellow-200'
+            }`}>
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                  {verificationType === 'NIN' && ninStatus.status === 'rejected' ? (
+                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  )}
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">Verification Pending</h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>Your {verificationType} verification is currently being processed. This may take 24-48 hours.</p>
+                  <h3 className={`text-sm font-medium ${
+                    verificationType === 'NIN' && ninStatus.status === 'rejected' ? 'text-red-800' : 'text-yellow-800'
+                  }`}>
+                    {verificationType === 'NIN' && ninStatus.status === 'rejected' ? 'Verification Failed' : 'Verification Pending'}
+                  </h3>
+                  <div className={`mt-2 text-sm ${
+                    verificationType === 'NIN' && ninStatus.status === 'rejected' ? 'text-red-700' : 'text-yellow-700'
+                  }`}>
+                    <p>
+                      {verificationType === 'NIN' && ninStatus.status === 'rejected' 
+                        ? (ninStatus.failure_reason || 'Your NIN verification was rejected. Please check your details and try again.')
+                        : `Your ${verificationType} verification is currently being processed. This may take 24-48 hours.`}
+                    </p>
+                    {verificationType === 'NIN' && ninStatus.status === 'rejected' && (
+                      <button
+                        type="button"
+                        onClick={() => setNinStatus({ status: 'not_submitted' })}
+                        className="mt-3 text-sm font-medium text-red-600 hover:text-red-500 underline"
+                      >
+                        Try Again
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -299,11 +344,13 @@ const NigerianVerificationForm = () => {
                   type="text"
                   id="verificationId"
                   value={verificationId}
-                  onChange={(e) => setVerificationId(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    setVerificationId(val);
+                  }}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                   placeholder={verificationType === 'NIN' ? 'Enter 11-digit NIN' : 'Enter 11-digit BVN'}
                   maxLength={11}
-                  pattern="[0-9]{11}"
                   required
                 />
                 <p className="mt-1 text-xs text-gray-500">
@@ -312,6 +359,65 @@ const NigerianVerificationForm = () => {
                     : 'Your 11-digit Bank Verification Number'}
                 </p>
               </div>
+
+              {verificationType === 'NIN' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">NIN Document Image</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="space-y-1 text-center">
+                      {ninFilePreview ? (
+                        <div className="relative inline-block">
+                          <img src={ninFilePreview} alt="NIN Preview" className="h-32 w-auto rounded-md" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNinFile(null);
+                              setNinFilePreview(null);
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-100 rounded-full p-1 text-red-600 hover:bg-red-200"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <div className="flex text-sm text-gray-600">
+                            <label htmlFor="nin-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none">
+                              <span>Upload a file</span>
+                              <input
+                                id="nin-upload"
+                                name="nin-upload"
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    setNinFile(file);
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => setNinFilePreview(reader.result);
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500 italic">
+                    Ensure the image is clear and shows all four corners of the document.
+                  </p>
+                </div>
+              )}
               
               {error && (
                 <div className="rounded-md bg-red-50 p-4">

@@ -94,7 +94,7 @@ const UserProfileManagement = () => {
     avatar: userProfile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.full_name || 'User')}&background=3b82f6&color=fff`,
     location: userProfile?.location || 'Not specified',
     joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently',
-    isVerified: userProfile?.is_verified || false,
+    isVerified: userProfile?.nin_verified || userProfile?.is_verified || false,
     isProfessional: userProfile?.role === 'professional',
     rating: userProfile?.rating || 0,
     reviewCount: userProfile?.review_count || 0,
