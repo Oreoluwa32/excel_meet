@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { validateNIN, validateBVN, checkVerificationStatus } from '../utils/nigerianVerification';
 import { useAuth } from '../contexts/AuthContext';
 import NigerianStateSelect from './ui/NigerianStateSelect';
@@ -23,28 +23,41 @@ const NigerianVerificationForm = () => {
   const [bvnStatus, setBvnStatus] = useState({ status: 'not_submitted' });
   const [sdkLoaded, setSdkLoaded] = useState(false);
   
-  // MetaMap Config
+  // MetaMap Config - Using import.meta.env for Vite
   const METAMAP_CLIENT_ID = import.meta.env.VITE_METAMAP_CLIENT_ID;
   const METAMAP_FLOW_ID = import.meta.env.VITE_METAMAP_FLOW_ID;
 
   // Load MetaMap SDK script
   useEffect(() => {
-    if (window.MetaMap) {
+    const scriptId = 'metamap-sdk-script';
+    if (document.getElementById(scriptId) || window.MetaMap) {
       setSdkLoaded(true);
       return;
     }
 
     const script = document.createElement('script');
+    script.id = scriptId;
     script.src = 'https://static.metamap.com/sdk/v1/index.js';
     script.async = true;
     script.onload = () => {
-      console.log('MetaMap SDK Loaded');
+      console.log('MetaMap SDK Loaded via onload');
       setSdkLoaded(true);
     };
     script.onerror = () => {
       setError('Failed to load verification SDK. Please check your internet connection.');
     };
     document.body.appendChild(script);
+
+    // Polling fallback in case onload doesn't fire correctly
+    const interval = setInterval(() => {
+      if (window.MetaMap) {
+        console.log('MetaMap SDK detected via polling');
+        setSdkLoaded(true);
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Listen for MetaMap events
@@ -147,7 +160,7 @@ const NigerianVerificationForm = () => {
       <div className="bg-white shadow rounded-lg p-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
           <p className="text-sm text-yellow-700 font-medium">
-            Verification system configuration missing (VITE_METAMAP_CLIENT_ID or VITE_METAMAP_FLOW_ID).
+            Verification system configuration missing.
           </p>
         </div>
       </div>
@@ -203,7 +216,10 @@ const NigerianVerificationForm = () => {
                   name="verificationType"
                   value="NIN"
                   checked={verificationType === 'NIN'}
-                  onChange={() => setVerificationType('NIN')}
+                  onChange={() => {
+                    setVerificationType('NIN');
+                    setVerificationId('');
+                  }}
                   disabled={ninStatus.status === 'verified'}
                 />
                 <span className="ml-2">NIN (National ID)</span>
@@ -215,7 +231,10 @@ const NigerianVerificationForm = () => {
                   name="verificationType"
                   value="BVN"
                   checked={verificationType === 'BVN'}
-                  onChange={() => setVerificationType('BVN')}
+                  onChange={() => {
+                    setVerificationType('BVN');
+                    setVerificationId('');
+                  }}
                   disabled={bvnStatus.status === 'verified'}
                 />
                 <span className="ml-2">BVN (Bank Verification)</span>
@@ -243,7 +262,7 @@ const NigerianVerificationForm = () => {
                   </h3>
                   <div className={`mt-2 text-sm ${currentStatus === 'rejected' ? 'text-red-700' : 'text-yellow-700'}`}>
                     <p>{currentStatus === 'rejected' ? (ninStatus.failure_reason || 'Identity verification failed.') : 'Your verification is being processed.'}</p>
-                    <button onClick={handleTryAgain} className="mt-3 text-sm font-medium underline">Try Again</button>
+                    <button onClick={handleTryAgain} className="mt-3 text-sm font-medium underline text-blue-600">Try Again</button>
                   </div>
                 </div>
               </div>
@@ -268,17 +287,18 @@ const NigerianVerificationForm = () => {
               {error && <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">{error}</div>}
               {success && <div className="rounded-md bg-green-50 p-4 text-sm text-green-700">{success}</div>}
               
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-2 min-h-[60px]" key={`${verificationType}-${verificationId}`}>
                 {sdkLoaded && verificationId.length === 11 ? (
                   <metamap-button
-                    clientId={METAMAP_CLIENT_ID}
-                    flowId={METAMAP_FLOW_ID}
+                    clientid={METAMAP_CLIENT_ID}
+                    flowid={METAMAP_FLOW_ID}
                     metadata={JSON.stringify({ userId: user?.id, verificationType, verificationId })}
-                    className="w-full h-12"
+                    className="w-full"
+                    style={{ display: 'block', minHeight: '48px' }}
                   />
                 ) : (
-                  <div className="w-full h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-sm font-medium">
-                    {verificationId.length < 11 ? `Enter 11-digit ${verificationType} to verify` : 'Loading Verification...'}
+                  <div className="w-full h-12 bg-gray-50 border border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-400 text-sm">
+                    {verificationId.length < 11 ? `Please enter 11 digits to enable verification` : 'Initialising MetaMap...'}
                   </div>
                 )}
               </div>
