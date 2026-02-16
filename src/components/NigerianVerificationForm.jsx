@@ -299,5 +299,3 @@ const NigerianVerificationForm = () => {
 };
 
 export default NigerianVerificationForm;
-
-export default NigerianVerificationForm;
