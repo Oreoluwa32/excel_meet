@@ -27,39 +27,53 @@ const NigerianVerificationForm = () => {
   const METAMAP_CLIENT_ID = import.meta.env.VITE_METAMAP_CLIENT_ID;
   const METAMAP_FLOW_ID = import.meta.env.VITE_METAMAP_FLOW_ID;
 
-  // Load MetaMap SDK script
-  useEffect(() => {
+  const loadMetaMapSDK = () => {
     const scriptId = 'metamap-sdk-script';
-    if (document.getElementById(scriptId) || window.MetaMap) {
+    
+    if (window.MetaMap) {
       setSdkLoaded(true);
+      setError(null);
       return;
+    }
+
+    const existingScript = document.getElementById(scriptId);
+    if (existingScript) {
+      existingScript.remove();
     }
 
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = 'https://static.metamap.com/sdk/v1/index.js';
+    script.src = 'https://sdk.metamap.com/v2/index.js';
     script.async = true;
     script.onload = () => {
-      console.log('MetaMap SDK Loaded via onload');
+      console.log('MetaMap SDK Loaded');
       setSdkLoaded(true);
+      setError(null);
     };
     script.onerror = () => {
+      console.error('MetaMap SDK Load Error');
       setError('Failed to load verification SDK. Please check your internet connection.');
+      setSdkLoaded(false);
     };
     document.body.appendChild(script);
+  };
 
-    // Polling fallback in case onload doesn't fire correctly
+  // Load MetaMap SDK script
+  useEffect(() => {
+    loadMetaMapSDK();
+
+    // Polling fallback
     const interval = setInterval(() => {
-      if (window.MetaMap) {
-        console.log('MetaMap SDK detected via polling');
+      if (window.MetaMap && !sdkLoaded) {
         setSdkLoaded(true);
+        setError(null);
         clearInterval(interval);
       }
-    }, 500);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
-
+  
   // Listen for MetaMap events
   useEffect(() => {
     const handleMetaMapVerified = async (event) => {
@@ -68,6 +82,14 @@ const NigerianVerificationForm = () => {
       
       setLoading(true);
       try {
+        // First, clean up any previous failed attempts to keep the DB clean
+        await supabase
+          .from('nigeria_verification')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('verification_type', verificationType)
+          .eq('is_verified', false);
+
         // ONLY save to database when verified
         const { error: dbError } = await supabase
           .from('nigeria_verification')
@@ -106,6 +128,7 @@ const NigerianVerificationForm = () => {
 
     const handleMetaMapFailed = (event) => {
       console.log('MetaMap Verification Failed:', event.detail);
+      // We do NOT save failures to the database as requested
       setError('Verification failed. Please ensure your details match your document and try again.');
       setSuccess(null);
     };
@@ -147,12 +170,32 @@ const NigerianVerificationForm = () => {
     }
   };
   
-  const handleTryAgain = () => {
-    setNinStatus({ status: 'not_submitted' });
-    setBvnStatus({ status: 'not_submitted' });
-    setError(null);
-    setSuccess(null);
-    setVerificationId('');
+  const handleTryAgain = async () => {
+    setLoading(true);
+    try {
+      // Clean up the rejected record from DB so it doesn't show up again
+      await supabase
+        .from('nigeria_verification')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('verification_type', verificationType)
+        .eq('is_verified', false);
+
+      setNinStatus({ status: 'not_submitted' });
+      setBvnStatus({ status: 'not_submitted' });
+      setError(null);
+      setSuccess(null);
+      setVerificationId('');
+      
+      // Retry loading SDK if it failed
+      if (!sdkLoaded) {
+        loadMetaMapSDK();
+      }
+    } catch (err) {
+      console.error('Error during try again:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!METAMAP_CLIENT_ID || !METAMAP_FLOW_ID) {
@@ -271,7 +314,7 @@ const NigerianVerificationForm = () => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="verificationId" className="block text-sm font-medium text-gray-700">
-                  Enter your 11-digit {verificationType}
+                  {verificationType === 'NIN' ? 'National Identification Number (NIN)' : 'Bank Verification Number (BVN)'}
                 </label>
                 <input
                   type="text"
@@ -298,7 +341,7 @@ const NigerianVerificationForm = () => {
                   />
                 ) : (
                   <div className="w-full h-12 bg-gray-50 border border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-400 text-sm">
-                    {verificationId.length < 11 ? `Please enter 11 digits to enable verification` : 'Initialising MetaMap...'}
+                    {verificationId.length < 11 ? `Please enter 11 digits to enable verification` : 'Loading Verification Button...'}
                   </div>
                 )}
               </div>
