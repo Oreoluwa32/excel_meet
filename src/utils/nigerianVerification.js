@@ -15,8 +15,9 @@ import axios from 'axios';
 export const uploadVerificationDocument = async (file, userId) => {
   try {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${Math.random()}.${fileExt}`;
-    const filePath = `nin-verifications/${fileName}`;
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    // Path must start with userId to satisfy RLS policy: (storage.foldername(name))[1] = auth.uid()::text
+    const filePath = `${userId}/nin-verifications/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('verification-documents')
@@ -42,44 +43,45 @@ export const uploadVerificationDocument = async (file, userId) => {
  * Note: This is a robust implementation template. Replace with actual MetaMap SDK or API calls.
  */
 const verifyWithMetaMap = async (nin, documentUrl, userData) => {
-  // MetaMap Credentials from environment variables
   const clientId = import.meta.env.VITE_METAMAP_CLIENT_ID;
   const clientSecret = import.meta.env.VITE_METAMAP_CLIENT_SECRET;
   const flowId = import.meta.env.VITE_METAMAP_FLOW_ID;
 
   if (!clientId || !clientSecret) {
-    console.warn('MetaMap credentials missing, using mock verification');
-    // Mock successful verification for 11111111111
+    console.warn('MetaMap credentials missing. Ensure VITE_METAMAP_CLIENT_ID and VITE_METAMAP_CLIENT_SECRET are set in your environment.');
+    // Mock successful verification for test NIN
     if (nin === '11111111111') {
       return { success: true, verified: true };
     }
-    // Mock failure for others
     return { 
       success: true, 
       verified: false, 
-      reason: 'NIN records do not match the provided document or information.' 
+      reason: 'Identity verification could not be completed at this time.' 
     };
   }
 
   try {
-    // 1. Get Access Token
-    const authResponse = await axios.post('https://api.metamap.com/oauth', {
-      grant_type: 'client_credentials'
-    }, {
-      headers: {
-        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
+    // 1. Get Access Token from MetaMap
+    const authResponse = await axios.post('https://api.metamap.com/oauth', 
+      new URLSearchParams({ grant_type: 'client_credentials' }), 
+      {
+        headers: {
+          'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       }
-    });
+    );
 
     const accessToken = authResponse.data.access_token;
 
-    // 2. Create Verification
+    // 2. Start a verification process
+    // MetaMap works by creating an "identity" or "verification"
     const verificationResponse = await axios.post('https://api.metamap.com/v2/verifications', {
       flowId,
       metadata: {
         userId: userData.userId,
-        nin: nin
+        nin: nin,
+        fullName: `${userData.first_name} ${userData.last_name}`
       },
       inputs: [
         {
@@ -101,20 +103,27 @@ const verifyWithMetaMap = async (nin, documentUrl, userData) => {
       ]
     }, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
       }
     });
 
+    // 3. Polling or checking initial status
+    // Note: MetaMap verifications are often asynchronous. 
+    // This implementation checks the immediate result.
+    const status = verificationResponse.data.status;
+    const isVerified = status === 'verified' || status === 'completed';
+    
     return {
       success: true,
-      verified: verificationResponse.data.status === 'verified',
-      reason: verificationResponse.data.failureReason || null
+      verified: isVerified,
+      reason: !isVerified ? (verificationResponse.data.failureReason || 'Verification failed. Please ensure the image is clear and NIN is correct.') : null
     };
   } catch (error) {
-    console.error('MetaMap API error:', error);
+    console.error('MetaMap integration error:', error.response?.data || error.message);
     return { 
       success: false, 
-      error: error.response?.data?.message || 'Failed to communicate with verification provider' 
+      error: error.response?.data?.message || 'Verification service is currently unavailable.' 
     };
   }
 };
