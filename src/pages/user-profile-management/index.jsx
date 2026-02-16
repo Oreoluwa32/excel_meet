@@ -4,6 +4,7 @@ import Header from '../../components/ui/Header';
 import BottomTabNavigation from '../../components/ui/BottomTabNavigation';
 import ProfileHeader from './components/ProfileHeader';
 import PersonalInfoSection from './components/PersonalInfoSection';
+import NigerianProfileSection from './components/NigerianProfileSection';
 import ProfessionalSection from './components/ProfessionalSection';
 import SubscriptionSection from './components/SubscriptionSection';
 import AccountSettingsSection from './components/AccountSettingsSection';
@@ -123,6 +124,9 @@ const UserProfileManagement = () => {
 
             {/* Personal Information */}
             <PersonalInfoSection userProfile={userProfile} />
+
+            {/* Nigerian Profile & Identity Verification */}
+            <NigerianProfileSection />
 
             {/* Social Links & Resume Section */}
             <SocialLinksSection />

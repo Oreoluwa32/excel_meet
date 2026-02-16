@@ -12,7 +12,20 @@ import { supabase } from '../../../utils/supabase';
  */
 const NigerianProfileSection = () => {
   const { user, userProfile, updateProfile } = useAuth();
-  const { preferences, updateCurrencyPreference } = usePreferences();
+  
+  // Safely use preferences context with fallbacks
+  let preferences = { currency: 'NGN' };
+  let updateCurrencyPreference = async () => ({ success: false });
+  
+  try {
+    const prefContext = usePreferences();
+    if (prefContext) {
+      preferences = prefContext.preferences;
+      updateCurrencyPreference = prefContext.updateCurrencyPreference;
+    }
+  } catch (e) {
+    console.warn('PreferencesContext not found, using default preferences');
+  }
   
   // Form state
   const [state, setState] = useState('');
