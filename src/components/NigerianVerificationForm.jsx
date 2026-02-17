@@ -43,7 +43,7 @@ const NigerianVerificationForm = () => {
 
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = 'https://sdk.metamap.com/v2/index.js';
+    script.src = 'https://web-button.metamap.com/button.js';
     script.async = true;
     script.onload = () => {
       console.log('MetaMap SDK Loaded');

@@ -27,6 +27,7 @@ const Messages = () => {
   const { user } = useAuth();
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
   const [chatReady, setChatReady] = useState(false);
+  const [activeChannel, setActiveChannel] = useState(null);
   const chatClient = getStreamClient();
 
   useEffect(() => {
@@ -71,7 +72,7 @@ const Messages = () => {
       <div className="max-w-7xl mx-auto h-[calc(100vh-4rem)] lg:h-[calc(100vh-7rem)]">
         <Chat client={chatClient} theme="str-chat__theme-light">
           <div className="flex h-full overflow-hidden bg-white shadow-sm rounded-lg border border-gray-200">
-            <div className="w-full lg:w-96 border-r border-gray-200">
+            <div className={`${activeChannel ? 'hidden lg:block' : 'block'} w-full lg:w-96 border-r border-gray-200`}>
               <div className="stream-chat-header">
                 <h2 className="font-semibold text-gray-900">Chats</h2>
                 <button
@@ -87,9 +88,28 @@ const Messages = () => {
                 sort={sort} 
                 options={options}
                 sendChannelsToList
+                onSelect={(channel) => setActiveChannel(channel)}
               />
             </div>
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className={`${activeChannel ? 'flex' : 'hidden lg:flex'} flex-1 flex flex-col h-full overflow-hidden`}>
+              {activeChannel && (
+                <div className="lg:hidden p-3 border-b border-gray-200 flex items-center bg-white sticky top-0 z-10">
+                  <button 
+                    onClick={() => setActiveChannel(null)}
+                    className="p-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                  >
+                    <Icon name="ArrowLeft" size={20} />
+                  </button>
+                  <div className="flex-1 flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-2">
+                       <Icon name="User" size={16} />
+                    </div>
+                    <span className="font-semibold text-gray-900 truncate">
+                      {activeChannel.data.name || activeChannel.data.id}
+                    </span>
+                  </div>
+                </div>
+              )}
               <Channel>
                 <Window>
                   <ChannelHeader />
@@ -108,7 +128,7 @@ const Messages = () => {
       <ComposeMessageModal
         isOpen={isComposeModalOpen}
         onClose={() => setIsComposeModalOpen(false)}
-        onConversationCreated={() => {}}
+        onConversationCreated={(channel) => setActiveChannel(channel)}
         currentUserId={user?.id}
       />
     </div>

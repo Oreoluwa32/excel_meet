@@ -39,7 +39,7 @@ export const ComposeMessageModal = ({ isOpen, onClose, onConversationCreated, cu
     if (!channel) {
       alert('Failed to start conversation. Please try again.');
     } else {
-      onConversationCreated(channel.id);
+      onConversationCreated(channel);
       handleClose();
     }
     setCreating(false);
