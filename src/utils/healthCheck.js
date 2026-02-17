@@ -11,7 +11,7 @@ import { supabase } from './supabase';
 export const checkSupabaseHealth = async () => {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('count')
       .limit(1)
       .single();

@@ -20,7 +20,7 @@ export async function verifySupabaseSetup() {
   // 1. Test Connection
   console.log('1️⃣ Testing Supabase Connection...');
   try {
-    const { data, error } = await supabase.from('profiles').select('count').limit(1);
+    const { data, error } = await supabase.from('user_profiles').select('count').limit(1);
     if (error) throw error;
     results.connection = true;
     console.log('✅ Connection successful\n');
@@ -33,25 +33,21 @@ export async function verifySupabaseSetup() {
   // 2. Test Tables Exist
   console.log('2️⃣ Checking Database Tables...');
   const requiredTables = [
-    'profiles',
-    'connections',
+    'user_profiles',
     'jobs',
     'job_applications',
-    'events',
-    'event_attendees',
+    'conversations',
     'messages',
     'notifications',
-    'posts',
-    'comments',
-    'reactions'
+    'reviews'
   ];
 
   let allTablesExist = true;
   for (const table of requiredTables) {
     try {
-      const { error } = await supabase.from(table).select('count').limit(1);
-      if (error) {
-        console.error(`❌ Table "${table}" not found`);
+      const { error } = await supabase.from(table).select('*').limit(1);
+      if (error && error.code !== 'PGRST116') {
+        console.error(`❌ Table "${table}" not found or error:`, error.message);
         allTablesExist = false;
       } else {
         console.log(`✅ Table "${table}" exists`);
@@ -67,7 +63,6 @@ export async function verifySupabaseSetup() {
     console.log('✅ All required tables exist\n');
   } else {
     console.log('❌ Some tables are missing. Run migrations in Supabase dashboard.\n');
-    console.log('💡 See SUPABASE_SETUP_GUIDE.md for instructions\n');
   }
 
   // 3. Test Authentication
@@ -90,7 +85,7 @@ export async function verifySupabaseSetup() {
 
   // 4. Test Storage Buckets
   console.log('4️⃣ Checking Storage Buckets...');
-  const requiredBuckets = ['avatars', 'documents', 'company-logos'];
+  const requiredBuckets = ['avatars', 'resumes', 'jobs', 'portfolios'];
   
   try {
     const { data: buckets, error } = await supabase.storage.listBuckets();
@@ -123,10 +118,11 @@ export async function verifySupabaseSetup() {
   // 5. Test RLS Policies
   console.log('5️⃣ Testing Row Level Security...');
   try {
-    // Try to query profiles without auth (should work for public data)
+    // Try to query user_profiles without auth (should work for public professional profiles)
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('id, full_name, avatar_url')
+      .eq('role', 'professional')
       .limit(1);
 
     if (error && error.message.includes('policy')) {

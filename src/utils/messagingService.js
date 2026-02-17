@@ -38,12 +38,12 @@ export const getUserConversations = async (userId) => {
           title,
           category
         ),
-        participant_1:participant_1_id (
+        participant_1:user_profiles!participant_1_id (
           id,
           full_name,
           avatar_url
         ),
-        participant_2:participant_2_id (
+        participant_2:user_profiles!participant_2_id (
           id,
           full_name,
           avatar_url
@@ -125,7 +125,7 @@ export const getConversationMessages = async (conversationId) => {
         content,
         is_read,
         created_at,
-        sender:sender_id (
+        sender:user_profiles!sender_id (
           id,
           full_name,
           avatar_url
@@ -222,7 +222,7 @@ export const subscribeToMessages = (conversationId, callback) => {
             content,
             is_read,
             created_at,
-            sender:sender_id (
+            sender:user_profiles!sender_id (
               id,
               full_name,
               avatar_url
@@ -303,12 +303,12 @@ export const getConversationDetails = async (conversationId) => {
           budget_max,
           budget_type
         ),
-        participant_1:participant_1_id (
+        participant_1:user_profiles!participant_1_id (
           id,
           full_name,
           avatar_url
         ),
-        participant_2:participant_2_id (
+        participant_2:user_profiles!participant_2_id (
           id,
           full_name,
           avatar_url
