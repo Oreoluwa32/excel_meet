@@ -84,7 +84,7 @@ const NigerianVerificationForm = () => {
       try {
         // First, clean up any previous failed attempts to keep the DB clean
         await supabase
-          .from('nigeria_verification')
+          .from('nigerian_verification')
           .delete()
           .eq('user_id', user.id)
           .eq('verification_type', verificationType)
@@ -92,7 +92,7 @@ const NigerianVerificationForm = () => {
 
         // ONLY save to database when verified
         const { error: dbError } = await supabase
-          .from('nigeria_verification')
+          .from('nigerian_verification')
           .insert({
             user_id: user.id,
             verification_type: verificationType,
@@ -175,7 +175,7 @@ const NigerianVerificationForm = () => {
     try {
       // Clean up the rejected record from DB so it doesn't show up again
       await supabase
-        .from('nigeria_verification')
+        .from('nigerian_verification')
         .delete()
         .eq('user_id', user.id)
         .eq('verification_type', verificationType)

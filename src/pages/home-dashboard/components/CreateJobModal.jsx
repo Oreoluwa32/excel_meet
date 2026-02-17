@@ -12,6 +12,14 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
   const [errors, setErrors] = useState({});
   const [images, setImages] = useState([]);
   
+  // Helper to format number with commas
+  const formatNumber = (val) => {
+    if (val === null || val === undefined || val === '') return '';
+    const numericValue = val.toString().replace(/[^0-9]/g, '');
+    if (numericValue === '') return '';
+    return new Intl.NumberFormat('en-NG').format(numericValue);
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -37,8 +45,8 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
         title: initialData.title || '',
         category: initialData.category || '',
         description: initialData.description || '',
-        budget_min: initialData.budget_min || '',
-        budget_max: initialData.budget_max || '',
+        budget_min: formatNumber(initialData.budget_min),
+        budget_max: formatNumber(initialData.budget_max),
         budget_type: initialData.budget_type || 'fixed',
         urgency: initialData.urgency || 'normal',
         state: initialData.state || '',
@@ -138,7 +146,13 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
 
   // Handle input change
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    // Format budget fields with commas
+    if (name === 'budget_min' || name === 'budget_max') {
+      value = formatNumber(value);
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -243,11 +257,13 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
       newErrors.description = 'Description must be at least 50 characters';
     }
 
-    if (!formData.budget_min || formData.budget_min <= 0) {
+    const budgetMin = formData.budget_min ? parseFloat(formData.budget_min.toString().replace(/,/g, '')) : 0;
+    if (!budgetMin || budgetMin <= 0) {
       newErrors.budget_min = 'Minimum budget is required';
     }
 
-    if (formData.budget_max && parseFloat(formData.budget_max) < parseFloat(formData.budget_min)) {
+    const budgetMax = formData.budget_max ? parseFloat(formData.budget_max.toString().replace(/,/g, '')) : 0;
+    if (budgetMax && budgetMax < budgetMin) {
       newErrors.budget_max = 'Maximum budget must be greater than minimum';
     }
 
@@ -292,9 +308,11 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
     setIsSubmitting(true);
 
     try {
-      // Prepare job data
+      // Prepare job data with numeric budget values (strip commas)
       const jobData = {
         ...formData,
+        budget_min: formData.budget_min ? parseFloat(formData.budget_min.toString().replace(/,/g, '')) : 0,
+        budget_max: formData.budget_max ? parseFloat(formData.budget_max.toString().replace(/,/g, '')) : null,
         images: images.map(img => img.file),
         created_at: new Date().toISOString()
       };
@@ -432,14 +450,12 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">₦</span>
               <input
-                type="number"
+                type="text"
                 id="budget_min"
                 name="budget_min"
                 value={formData.budget_min}
                 onChange={handleChange}
-                placeholder="5000"
-                min="0"
-                step="100"
+                placeholder="5,000"
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.budget_min ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -456,14 +472,12 @@ const CreateJobModal = ({ isOpen, onClose, onSubmit, editMode = false, initialDa
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">₦</span>
               <input
-                type="number"
+                type="text"
                 id="budget_max"
                 name="budget_max"
                 value={formData.budget_max}
                 onChange={handleChange}
-                placeholder="10000"
-                min="0"
-                step="100"
+                placeholder="10,000"
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.budget_max ? 'border-red-500' : 'border-gray-300'
                 }`}
