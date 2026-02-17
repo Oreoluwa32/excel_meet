@@ -443,7 +443,12 @@ const JobDetails = () => {
     timePeriod: formatTimePeriod(jobData.start_date, jobData.duration, jobData.duration_unit),
     isUrgent: jobData.urgency === 'urgent',
     description: jobData.description,
-    requirements: jobData.requirements || [],
+    requirements: [
+      ...(jobData.skills_required || []),
+      ...(typeof jobData.requirements === 'string' 
+        ? jobData.requirements.split('\n').filter(r => r.trim())
+        : (Array.isArray(jobData.requirements) ? jobData.requirements : []))
+    ],
     images: jobData.images || [],
     budget: formatBudget(jobData.budget_min, jobData.budget_max),
     isPremium: false // Can be determined based on user subscription
