@@ -88,14 +88,20 @@ const Messages = () => {
                 sort={sort} 
                 options={options}
                 sendChannelsToList
-                onSelect={(channel) => setActiveChannel(channel)}
+                onSelect={(channel) => {
+                  console.log('📱 Mobile Select Channel:', channel.id);
+                  setActiveChannel(channel);
+                }}
               />
             </div>
             <div className={`${activeChannel ? 'flex' : 'hidden lg:flex'} flex-1 flex flex-col h-full overflow-hidden`}>
               {activeChannel && (
                 <div className="lg:hidden p-3 border-b border-gray-200 flex items-center bg-white sticky top-0 z-10">
                   <button 
-                    onClick={() => setActiveChannel(null)}
+                    onClick={() => {
+                      console.log('🔙 Mobile Back to List');
+                      setActiveChannel(null);
+                    }}
                     className="p-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-full"
                   >
                     <Icon name="ArrowLeft" size={20} />
@@ -105,12 +111,12 @@ const Messages = () => {
                        <Icon name="User" size={16} />
                     </div>
                     <span className="font-semibold text-gray-900 truncate">
-                      {activeChannel.data.name || activeChannel.data.id}
+                      {activeChannel.data?.name || activeChannel.data?.id}
                     </span>
                   </div>
                 </div>
               )}
-              <Channel>
+              <Channel channel={activeChannel}>
                 <Window>
                   <ChannelHeader />
                   <MessageList />
