@@ -24,8 +24,8 @@ const plans = {
   },
   basic: {
     name: 'Basic',
-    price: '₦4,000/month',
-    amount: 4000,
+    price: '₦1,500/month',
+    amount: 1500,
     planCode: 'PLN_c8ju4nnjje9jwg9',
     features: [
       'Enhanced job search',
@@ -40,8 +40,8 @@ const plans = {
   },
   pro: {
     name: 'Pro',
-    price: '₦8,000/month',
-    amount: 8000,
+    price: '₦3,000/month',
+    amount: 3000,
     planCode: 'PLN_i6ijfhscu3l8v3k',
     features: [
       'Everything in Basic',
@@ -55,8 +55,8 @@ const plans = {
   },
   elite: {
     name: 'Elite',
-    price: '₦16,000/month',
-    amount: 16000,
+    price: '₦4,000/month',
+    amount: 4000,
     planCode: 'PLN_vg7iryponce5mbt',
     features: [
       'Everything in Pro',
