@@ -16,11 +16,13 @@ export const initializePaystackPayment = async (paymentData) => {
     // In a real application, this would call the Paystack API
     // For this example, we'll simulate the API call
     
+    const { data: { user } } = await supabase.auth.getUser();
+
     // First, record the payment attempt in our database
     const { data: paymentRecord, error: paymentError } = await supabase
       .from('payment_history')
       .insert({
-        user_id: supabase.auth.user()?.id,
+        user_id: user?.id,
         amount,
         currency: 'NGN',
         payment_method: 'paystack',
@@ -76,11 +78,13 @@ export const initializeFlutterwavePayment = async (paymentData) => {
     // In a real application, this would call the Flutterwave API
     // For this example, we'll simulate the API call
     
+    const { data: { user } } = await supabase.auth.getUser();
+
     // First, record the payment attempt in our database
     const { data: paymentRecord, error: paymentError } = await supabase
       .from('payment_history')
       .insert({
-        user_id: supabase.auth.user()?.id,
+        user_id: user?.id,
         amount,
         currency: 'NGN',
         payment_method: 'flutterwave',
@@ -137,11 +141,13 @@ export const processUSSDPayment = async (paymentData) => {
     // In a real application, this would call a payment API
     // For this example, we'll simulate the API call
     
+    const { data: { user } } = await supabase.auth.getUser();
+
     // First, record the payment attempt in our database
     const { data: paymentRecord, error: paymentError } = await supabase
       .from('payment_history')
       .insert({
-        user_id: supabase.auth.user()?.id,
+        user_id: user?.id,
         amount,
         currency: 'NGN',
         payment_method: 'ussd',
@@ -204,11 +210,13 @@ export const processBankTransferPayment = async (paymentData) => {
     // In a real application, this would call a payment API to generate virtual account
     // For this example, we'll simulate the API call
     
+    const { data: { user } } = await supabase.auth.getUser();
+
     // First, record the payment attempt in our database
     const { data: paymentRecord, error: paymentError } = await supabase
       .from('payment_history')
       .insert({
-        user_id: supabase.auth.user()?.id,
+        user_id: user?.id,
         amount,
         currency: 'NGN',
         payment_method: 'bank_transfer',

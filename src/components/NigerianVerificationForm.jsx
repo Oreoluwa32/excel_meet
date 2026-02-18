@@ -27,6 +27,12 @@ const NigerianVerificationForm = () => {
   const METAMAP_CLIENT_ID = import.meta.env.VITE_METAMAP_CLIENT_ID;
   const METAMAP_FLOW_ID = import.meta.env.VITE_METAMAP_FLOW_ID;
 
+  useEffect(() => {
+    if (!METAMAP_CLIENT_ID || !METAMAP_FLOW_ID) {
+      console.error('MetaMap credentials missing. Ensure VITE_METAMAP_CLIENT_ID and VITE_METAMAP_FLOW_ID are set in your environment.');
+    }
+  }, [METAMAP_CLIENT_ID, METAMAP_FLOW_ID]);
+
   const loadMetaMapSDK = () => {
     const scriptId = 'metamap-sdk-script';
     
@@ -77,14 +83,13 @@ const NigerianVerificationForm = () => {
   // Listen for MetaMap events
   useEffect(() => {
     const handleMetaMapVerified = async (event) => {
-      console.log('MetaMap Verification Success:', event.detail);
       const { identityId, verificationId: metamapVid } = event.detail;
       
       setLoading(true);
       try {
         // First, clean up any previous failed attempts to keep the DB clean
         await supabase
-          .from('nigerian_verification')
+          .from('nigeria_verification')
           .delete()
           .eq('user_id', user.id)
           .eq('verification_type', verificationType)
@@ -92,7 +97,7 @@ const NigerianVerificationForm = () => {
 
         // ONLY save to database when verified
         const { error: dbError } = await supabase
-          .from('nigerian_verification')
+          .from('nigeria_verification')
           .insert({
             user_id: user.id,
             verification_type: verificationType,
@@ -127,7 +132,6 @@ const NigerianVerificationForm = () => {
     };
 
     const handleMetaMapFailed = (event) => {
-      console.log('MetaMap Verification Failed:', event.detail);
       // We do NOT save failures to the database as requested
       setError('Verification failed. Please ensure your details match your document and try again.');
       setSuccess(null);
@@ -175,7 +179,7 @@ const NigerianVerificationForm = () => {
     try {
       // Clean up the rejected record from DB so it doesn't show up again
       await supabase
-        .from('nigerian_verification')
+        .from('nigeria_verification')
         .delete()
         .eq('user_id', user.id)
         .eq('verification_type', verificationType)

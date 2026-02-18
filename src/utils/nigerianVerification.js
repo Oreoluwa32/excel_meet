@@ -42,7 +42,7 @@ export const checkVerificationStatus = async (verificationType) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
     const { data, error } = await supabase
-      .from('nigerian_verification')
+      .from('nigeria_verification')
       .select('*')
       .eq('user_id', user.id)
       .eq('verification_type', verificationType)

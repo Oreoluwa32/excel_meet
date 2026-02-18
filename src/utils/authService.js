@@ -4,18 +4,19 @@ const authService = {
   // Sign in with email and password
   signIn: async (email, password) => {
     try {
-      console.log('AuthService: Attempting sign in for:', email);
+      if (import.meta.env.DEV) {
+        console.log('AuthService: Attempting sign in for:', email);
+      }
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('AuthService: Sign in error:', error);
+        console.error('AuthService: Sign in error:', error.message);
         return { success: false, error: error.message };
       }
 
-      console.log('AuthService: Sign in successful:', data);
       return { success: true, data };
     } catch (error) {
       console.error('AuthService: Sign in exception:', error);
@@ -33,7 +34,9 @@ const authService = {
   // Sign up with email and password
   signUp: async (email, password, userData = {}) => {
     try {
-      console.log('AuthService: Attempting sign up for:', email, 'with metadata:', userData);
+      if (import.meta.env.DEV) {
+        console.log('AuthService: Attempting sign up for:', email, 'with metadata:', userData);
+      }
       const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -45,11 +48,10 @@ const authService = {
       });
 
       if (error) {
-        console.error('AuthService: Sign up error:', error);
+        console.error('AuthService: Sign up error:', error.message);
         return { success: false, error: error.message };
       }
 
-      console.log('AuthService: Sign up successful:', data);
       return { success: true, data };
     } catch (error) {
       console.error('AuthService: Sign up exception:', error);
@@ -210,7 +212,9 @@ const authService = {
   // Sign in with Google OAuth
   signInWithGoogle: async () => {
     try {
-      console.log('AuthService: Attempting Google sign in');
+      if (import.meta.env.DEV) {
+        console.log('AuthService: Attempting Google sign in');
+      }
       const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -220,11 +224,10 @@ const authService = {
       });
 
       if (error) {
-        console.error('AuthService: Google sign in error:', error);
+        console.error('AuthService: Google sign in error:', error.message);
         return { success: false, error: error.message };
       }
 
-      console.log('AuthService: Google sign in initiated:', data);
       return { success: true, data };
     } catch (error) {
       console.error('AuthService: Google sign in exception:', error);
