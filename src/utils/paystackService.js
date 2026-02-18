@@ -34,13 +34,15 @@ export const loadPaystackScript = () => {
  * @param {Object} paymentData - Payment configuration
  * @param {number} paymentData.amount - Amount in kobo (multiply naira by 100)
  * @param {string} paymentData.email - Customer email
+ * @param {string} paymentData.firstName - Customer first name
+ * @param {string} paymentData.lastName - Customer last name
  * @param {string} paymentData.reference - Unique payment reference
  * @param {Object} paymentData.metadata - Additional metadata
  * @param {Function} onSuccess - Success callback
  * @param {Function} onClose - Close callback
  * @returns {Promise<void>}
  */
-export const initializePayment = async ({ amount, email, reference, metadata = {} }, onSuccess, onClose) => {
+export const initializePayment = async ({ amount, email, firstName, lastName, reference, metadata = {} }, onSuccess, onClose) => {
   try {
     await loadPaystackScript();
 
@@ -48,6 +50,8 @@ export const initializePayment = async ({ amount, email, reference, metadata = {
       key: PAYSTACK_PUBLIC_KEY,
       email,
       amount: amount * 100, // Convert to kobo
+      firstname: firstName,
+      lastname: lastName,
       ref: reference || `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       metadata: {
         ...metadata,
@@ -81,13 +85,15 @@ export const initializePayment = async ({ amount, email, reference, metadata = {
  * @param {Object} subscriptionData - Subscription configuration
  * @param {string} subscriptionData.planCode - Paystack plan code
  * @param {string} subscriptionData.email - Customer email
+ * @param {string} subscriptionData.firstName - Customer first name
+ * @param {string} subscriptionData.lastName - Customer last name
  * @param {string} subscriptionData.reference - Unique subscription reference
  * @param {Object} subscriptionData.metadata - Additional metadata
  * @param {Function} onSuccess - Success callback
  * @param {Function} onClose - Close callback
  * @returns {Promise<void>}
  */
-export const initializeSubscription = async ({ planCode, email, reference, metadata = {} }, onSuccess, onClose) => {
+export const initializeSubscription = async ({ planCode, email, firstName, lastName, reference, metadata = {} }, onSuccess, onClose) => {
   try {
     await loadPaystackScript();
 
@@ -95,6 +101,8 @@ export const initializeSubscription = async ({ planCode, email, reference, metad
       key: PAYSTACK_PUBLIC_KEY,
       email,
       plan: planCode,
+      firstname: firstName,
+      lastname: lastName,
       ref: reference || `SUB_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       metadata: {
         ...metadata,

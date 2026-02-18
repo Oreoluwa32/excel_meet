@@ -14,7 +14,7 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { signIn } = useAuth();
+  const { signIn, checkEmailExists } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -33,6 +33,14 @@ const LoginForm = () => {
     setError('');
 
     try {
+      // Check if email exists first
+      const emailCheck = await checkEmailExists(formData.email);
+      if (emailCheck.success && !emailCheck.exists) {
+        setError('Email not found');
+        setLoading(false);
+        return;
+      }
+
       console.log('Attempting to sign in with:', formData.email);
       const result = await signIn(formData.email, formData.password);
       console.log('Sign in result:', result);

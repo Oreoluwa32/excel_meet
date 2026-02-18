@@ -88,11 +88,19 @@ const SubscriptionSection = ({ userProfile }) => {
 
     try {
       const reference = `SUB_${user.id}_${planKey}_${Date.now()}`;
+      
+      // Get customer name from userProfile
+      const fullName = userProfile?.full_name || '';
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
 
       await initializeSubscription(
         {
           planCode: plan.planCode,
           email: user.email,
+          firstName,
+          lastName,
           reference,
           metadata: {
             user_id: user.id,

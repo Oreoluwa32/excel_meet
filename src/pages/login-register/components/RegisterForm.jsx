@@ -22,7 +22,7 @@ const RegisterForm = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const { signUp } = useAuth();
+  const { signUp, checkEmailExists } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -64,6 +64,14 @@ const RegisterForm = () => {
     }
 
     try {
+      // Check if email already exists
+      const emailCheck = await checkEmailExists(formData.email);
+      if (emailCheck.success && emailCheck.exists) {
+        setError('Email already registered. Proceed to login');
+        setLoading(false);
+        return;
+      }
+
       const userData = {
         full_name: formData.fullName,
         role: formData.role,

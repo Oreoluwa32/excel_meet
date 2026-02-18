@@ -253,6 +253,7 @@ export function AuthProvider({ children }) {
     resetPassword,
     updatePassword,
     signInWithGoogle,
+    checkEmailExists: authService.checkEmailExists,
     clearError: () => setAuthError(null),
   };
 

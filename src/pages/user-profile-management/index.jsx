@@ -146,7 +146,7 @@ const UserProfileManagement = () => {
             {/* Subscription Section */}
             <SubscriptionSection userProfile={userProfile} />
 
-            {/* Payment Methods */}
+            {/* Payment History */}
             <PaymentMethodsSection 
               user={userData} 
               onSave={handleSaveProfileData} 

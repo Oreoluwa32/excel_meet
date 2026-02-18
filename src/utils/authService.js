@@ -64,6 +64,24 @@ const authService = {
     }
   },
 
+  // Check if email exists
+  checkEmailExists: async (email) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('check_email_exists', { email_to_check: email });
+
+      if (error) {
+        console.error('AuthService: Check email error:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, exists: data };
+    } catch (error) {
+      console.error('AuthService: Check email exception:', error);
+      return { success: false, error: 'Failed to verify email status.' };
+    }
+  },
+
   // Sign out
   signOut: async () => {
     try {
