@@ -117,22 +117,32 @@ export const searchJobs = async (options = {}) => {
     // Apply pagination
     queryBuilder = queryBuilder.range(offset, offset + limit - 1);
 
-    // Execute query
-    const { data, error, count } = await queryBuilder;
+    // Execute optimized search RPC
+    const { data, error } = await supabase.rpc('search_jobs_optimized', {
+      p_query: query || '',
+      p_category: categories.length === 1 ? categories[0] : null,
+      p_urgency: urgency,
+      p_state: state,
+      p_city: city,
+      p_min_budget: minBudget,
+      p_max_budget: maxBudget,
+      p_page: page,
+      p_limit: limit
+    });
 
     if (error) {
-      console.error('Error searching jobs:', error);
+      console.error('Error searching jobs (optimized):', error);
       return { data: [], error, hasMore: false, total: 0 };
     }
 
-    // Calculate if there are more pages
+    const count = data.length > 0 ? data[0].total_count : 0;
     const hasMore = count > offset + limit;
 
     return { 
       data: data || [], 
       error: null, 
       hasMore,
-      total: count || 0
+      total: count
     };
   } catch (error) {
     console.error('Error in searchJobs:', error);
@@ -234,46 +244,30 @@ export const searchProfessionals = async (options = {}) => {
     // Apply pagination
     queryBuilder = queryBuilder.range(offset, offset + limit - 1);
 
-    // Execute query
-    const { data, error, count } = await queryBuilder;
+    // Execute optimized search RPC
+    const { data, error } = await supabase.rpc('search_professionals_optimized', {
+      p_query: query || '',
+      p_skills: skills.length > 0 ? skills : null,
+      p_location: [state, city].filter(Boolean).join(', ') || null,
+      p_min_rating: minRating,
+      p_verified_only: verifiedOnly,
+      p_page: page,
+      p_limit: limit
+    });
 
     if (error) {
-      console.error('Error searching professionals:', error);
+      console.error('Error searching professionals (optimized):', error);
       return { data: [], error, hasMore: false, total: 0 };
     }
 
-    // Calculate average rating for each professional
-    let professionals = (data || []).map(prof => {
-      const ratings = prof.reviews?.map(r => r.rating) || [];
-      const avgRating = ratings.length > 0 
-        ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length 
-        : 0;
-      
-      return {
-        ...prof,
-        rating: avgRating,
-        reviewCount: ratings.length
-      };
-    });
-
-    // Apply rating filter if specified
-    if (minRating !== null) {
-      professionals = professionals.filter(prof => prof.rating >= minRating);
-    }
-
-    // Sort by rating if requested
-    if (sortBy === 'rating') {
-      professionals.sort((a, b) => b.rating - a.rating);
-    }
-
-    // Calculate if there are more pages
+    const count = data.length > 0 ? data[0].total_count : 0;
     const hasMore = count > offset + limit;
 
     return { 
-      data: professionals, 
+      data: data || [], 
       error: null, 
       hasMore,
-      total: count || 0
+      total: count
     };
   } catch (error) {
     console.error('Error in searchProfessionals:', error);
@@ -354,20 +348,15 @@ export const getTrendingJobs = async (limit = 10) => {
  */
 export const getJobCategories = async () => {
   try {
-    const { data, error } = await supabase
-      .from('jobs')
-      .select('category')
-      .eq('status', 'open');
+    // Use RPC for DISTINCT categories to avoid fetching all rows
+    const { data, error } = await supabase.rpc('get_unique_job_categories');
 
     if (error) {
       console.error('Error fetching job categories:', error);
       return { data: [], error };
     }
 
-    // Get unique categories
-    const categories = [...new Set(data.map(job => job.category))].sort();
-
-    return { data: categories, error: null };
+    return { data: data.map(item => item.category), error: null };
   } catch (error) {
     console.error('Error in getJobCategories:', error);
     return { data: [], error };
@@ -380,22 +369,15 @@ export const getJobCategories = async () => {
  */
 export const getAvailableSkills = async () => {
   try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('skills')
-      .eq('role', 'professional')
-      .not('skills', 'is', null);
+    // Use RPC for DISTINCT skills to avoid fetching all profiles
+    const { data, error } = await supabase.rpc('get_unique_professional_skills');
 
     if (error) {
       console.error('Error fetching available skills:', error);
       return { data: [], error };
     }
 
-    // Flatten and get unique skills
-    const allSkills = data.flatMap(prof => prof.skills || []);
-    const uniqueSkills = [...new Set(allSkills)].sort();
-
-    return { data: uniqueSkills, error: null };
+    return { data: data.map(item => item.skill), error: null };
   } catch (error) {
     console.error('Error in getAvailableSkills:', error);
     return { data: [], error };

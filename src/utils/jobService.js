@@ -51,15 +51,8 @@ export const uploadJobImages = async (images, jobId) => {
 };
 
 /**
- * Fetch jobs with optional filters and pagination
+ * Fetch jobs with optional filters and pagination (Optimized)
  * @param {Object} options - Query options
- * @param {string} options.category - Filter by category
- * @param {string} options.urgency - Filter by urgency level
- * @param {string} options.state - Filter by state
- * @param {string} options.city - Filter by city
- * @param {string} options.status - Filter by status (default: 'open')
- * @param {number} options.page - Page number (default: 1)
- * @param {number} options.limit - Items per page (default: 10)
  * @returns {Promise<{data: Array, error: Error|null, hasMore: boolean}>}
  */
 export const fetchJobs = async (options = {}) => {
@@ -69,49 +62,26 @@ export const fetchJobs = async (options = {}) => {
       urgency = null,
       state = null,
       city = null,
-      status = 'open',
       page = 1,
       limit = 10
     } = options;
 
-    // Calculate offset for pagination
-    const offset = (page - 1) * limit;
-
-    // Build query
-    let query = supabase
-      .from('jobs')
-      .select('*', { count: 'exact' })
-      .eq('status', status)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    // Apply filters
-    if (category) {
-      query = query.eq('category', category);
-    }
-
-    if (urgency) {
-      query = query.eq('urgency', urgency);
-    }
-
-    if (state) {
-      query = query.eq('state', state);
-    }
-
-    if (city) {
-      query = query.eq('city', city);
-    }
-
-    // Execute query
-    const { data, error, count } = await query;
+    const { data, error } = await supabase.rpc('search_jobs_optimized', {
+      p_category: category,
+      p_urgency: urgency,
+      p_state: state,
+      p_city: city,
+      p_page: page,
+      p_limit: limit
+    });
 
     if (error) {
-      console.error('Error fetching jobs:', error);
+      console.error('Error fetching jobs (optimized):', error);
       return { data: [], error, hasMore: false };
     }
 
-    // Calculate if there are more pages
-    const hasMore = count > offset + limit;
+    const totalCount = data.length > 0 ? data[0].total_count : 0;
+    const hasMore = totalCount > (page * limit);
 
     return { data: data || [], error: null, hasMore };
   } catch (error) {

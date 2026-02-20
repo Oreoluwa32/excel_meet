@@ -49,7 +49,15 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
         persistSession: true,
         detectSessionInUrl: true,
         storage: getStorage(),
-      }
+      },
+      db: {
+        schema: 'public',
+      },
+      global: {
+        headers: { 'x-my-custom-header': 'excel-meet' },
+      },
+      // Enable debug mode in development to see SQL-like queries in console
+      debug: import.meta.env.DEV,
     })
   : {
       auth: {

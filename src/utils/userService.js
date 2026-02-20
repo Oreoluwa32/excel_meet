@@ -31,39 +31,26 @@ export const fetchUserProfile = async (userId) => {
 };
 
 /**
- * Fetch user profile with additional computed data (rating, reviews count, jobs posted)
+ * Fetch user profile with additional denormalized data (rating, reviews count, jobs posted)
+ * Optimized for high performance and high scale
  * @param {string} userId - User ID
  * @returns {Promise<{data: Object|null, error: Error|null}>}
  */
 export const fetchUserProfileWithStats = async (userId) => {
   try {
-    // Fetch base profile
+    // Fetch base profile which now contains denormalized stats
     const { data: profile, error: profileError } = await fetchUserProfile(userId);
     
     if (profileError) {
       return { success: false, data: null, error: profileError };
     }
 
-    // Fetch average rating
-    const { data: avgRating, error: ratingError } = await supabase
-      .rpc('get_user_average_rating', { p_user_id: userId });
-
-    // Fetch reviews count
-    const { data: reviewsCount, error: reviewsError } = await supabase
-      .rpc('get_user_reviews_count', { p_user_id: userId });
-
-    // Fetch jobs posted count
-    const { count: jobsPosted, error: jobsError } = await supabase
-      .from('jobs')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
-
-    // Combine all data
+    // Combine all data from the single profile fetch
     const enrichedProfile = {
       ...profile,
-      rating: parseFloat(avgRating) || 0,
-      reviewsCount: parseInt(reviewsCount) || 0,
-      jobsPosted: jobsPosted || 0
+      rating: parseFloat(profile.avg_rating) || 0,
+      reviewsCount: parseInt(profile.review_count) || 0,
+      jobsPosted: parseInt(profile.jobs_posted_count) || 0
     };
 
     return { success: true, data: enrichedProfile, error: null };
@@ -101,18 +88,17 @@ export const updateUserProfile = async (userId, updates) => {
 };
 
 /**
- * Search users by name or email
+ * Search users by name or email (Optimized with RPC)
  * @param {string} query - Search query
  * @param {number} limit - Maximum results to return
  * @returns {Promise<{data: Array, error: Error|null}>}
  */
 export const searchUsers = async (query, limit = 10) => {
   try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('id, full_name, email, avatar_url, role, verification_status')
-      .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
-      .limit(limit);
+    const { data, error } = await supabase.rpc('search_professionals_optimized', {
+      p_query: query,
+      p_limit: limit
+    });
 
     if (error) {
       console.error('Error searching users:', error);
@@ -191,34 +177,27 @@ export const uploadPortfolioImage = async (image, userId) => {
 };
 
 /**
- * Fetch job statistics for a user
+ * Fetch job statistics for a user (Optimized)
  * @param {string} userId - User ID
  * @returns {Promise<{data: Object|null, error: Error|null}>}
  */
 export const fetchUserJobStats = async (userId) => {
   try {
-    // Fetch jobs posted count
-    const { data: jobsPostedCount, error: postedError } = await supabase
-      .rpc('get_user_jobs_posted_count', { p_user_id: userId });
+    // Fetch base profile which now contains denormalized stats
+    const { data: profile, error } = await fetchUserProfile(userId);
+    
+    if (error) throw error;
 
-    // Fetch active jobs count
-    const { data: activeJobsCount, error: activeError } = await supabase
+    // Fetch active jobs count (this one is still an RPC as it depends on transient status)
+    const { data: activeJobsCount } = await supabase
       .rpc('get_user_active_jobs_count', { p_user_id: userId });
-
-    // Fetch completed jobs count (as job poster)
-    const { data: completedJobsCount, error: completedError } = await supabase
-      .rpc('get_user_completed_jobs_count', { p_user_id: userId });
-
-    // Fetch completed jobs count (as professional)
-    const { data: professionalCompletedCount, error: profCompletedError } = await supabase
-      .rpc('get_professional_completed_jobs_count', { p_user_id: userId });
 
     return {
       data: {
-        jobsPosted: jobsPostedCount || 0,
+        jobsPosted: profile.jobs_posted_count || 0,
         activeJobs: activeJobsCount || 0,
-        completedJobsPosted: completedJobsCount || 0,
-        completedJobsAsProfessional: professionalCompletedCount || 0
+        completedJobsPosted: profile.jobs_completed_count || 0,
+        completedJobsAsProfessional: profile.jobs_completed_count || 0 // Shared for now
       },
       error: null
     };

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import crypto from 'crypto';
+import { rateLimit } from 'express-rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -28,6 +29,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: 'draft-7', // set `RateLimit` and `RateLimit-Policy` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+// Apply rate limiter to all requests
+app.use(limiter);
+
+// Specific stricter limiter for webhooks
+const webhookLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  limit: 30, // Limit each IP to 30 requests per minute
+  message: { error: 'Webhook rate limit exceeded' }
+});
+
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
@@ -44,7 +64,7 @@ app.get('/health', (req, res) => {
 });
 
 // Paystack webhook endpoint
-app.post('/api/webhooks/paystack', async (req, res) => {
+app.post('/api/webhooks/paystack', webhookLimiter, async (req, res) => {
   try {
     // Verify webhook signature
     // Support both PAYSTACK_SECRET_KEY (production) and VITE_PAYSTACK_SECRET_KEY (local)
