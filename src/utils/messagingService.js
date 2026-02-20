@@ -212,41 +212,55 @@ export const subscribeToMessages = (conversationId, callback) => {
         filter: `conversation_id=eq.${conversationId}`
       },
       async (payload) => {
-        // Fetch the complete message with sender info
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            id,
-            conversation_id,
-            sender_id,
-            content,
-            is_read,
-            created_at,
-            sender:user_profiles!sender_id (
+        try {
+          const { data, error } = await supabase
+            .from('messages')
+            .select(`
               id,
-              full_name,
-              avatar_url
-            )
-          `)
-          .eq('id', payload.new.id)
-          .single();
+              conversation_id,
+              sender_id,
+              content,
+              is_read,
+              created_at,
+              sender:user_profiles!sender_id (
+                id,
+                full_name,
+                avatar_url
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
 
-        if (!error && data) {
-          const transformedMessage = {
-            id: data.id,
-            conversationId: data.conversation_id,
-            senderId: data.sender_id,
-            senderName: data.sender?.full_name || 'Unknown User',
-            senderAvatar: data.sender?.avatar_url,
-            content: data.content,
-            isRead: data.is_read,
-            createdAt: data.created_at
-          };
-          callback(transformedMessage);
+          if (error) {
+            console.error('Error fetching message details:', error);
+            return;
+          }
+
+          if (data) {
+            const transformedMessage = {
+              id: data.id,
+              conversationId: data.conversation_id,
+              senderId: data.sender_id,
+              senderName: data.sender?.full_name || 'Unknown User',
+              senderAvatar: data.sender?.avatar_url,
+              content: data.content,
+              isRead: data.is_read,
+              createdAt: data.created_at
+            };
+            callback(transformedMessage);
+          }
+        } catch (error) {
+          console.error('Error processing message subscription:', error);
         }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('Message subscription established for conversation:', conversationId);
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        console.error('Message subscription error for conversation:', conversationId, status);
+      }
+    });
 
   return subscription;
 };
@@ -265,7 +279,13 @@ export const subscribeToConversations = (userId, callback) => {
         table: 'conversations',
         filter: `participant_1_id=eq.${userId}`
       },
-      callback
+      (payload) => {
+        try {
+          callback(payload);
+        } catch (error) {
+          console.error('Error processing conversation update:', error);
+        }
+      }
     )
     .on(
       'postgres_changes',
@@ -275,9 +295,21 @@ export const subscribeToConversations = (userId, callback) => {
         table: 'conversations',
         filter: `participant_2_id=eq.${userId}`
       },
-      callback
+      (payload) => {
+        try {
+          callback(payload);
+        } catch (error) {
+          console.error('Error processing conversation update:', error);
+        }
+      }
     )
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('Conversation subscription established for user:', userId);
+      } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        console.error('Conversation subscription error for user:', userId, status);
+      }
+    });
 
   return subscription;
 };

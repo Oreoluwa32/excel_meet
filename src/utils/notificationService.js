@@ -197,19 +197,27 @@ export const createNotification = async ({ userId, type, title, message, link, m
 
 /**
  * Subscribe to real-time notifications
+ * @param {string} userId - User ID to subscribe to notifications for
  * @param {Function} callback - Callback function to handle new notifications
  * @returns {Object} Subscription object with unsubscribe method
  */
-export const subscribeToNotifications = (callback) => {
+export const subscribeToNotifications = (userId, callback) => {
+  if (!userId) {
+    console.error('User ID is required for notification subscription');
+    return {
+      unsubscribe: () => {}
+    };
+  }
+
   const channel = supabase
-    .channel('notifications-channel')
+    .channel(`notifications-channel-${userId}`)
     .on(
       'postgres_changes',
       {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${supabase.auth.getUser().then(u => u.data.user?.id)}`
+        filter: `user_id=eq.${userId}`
       },
       (payload) => {
         console.log('New notification received:', payload);

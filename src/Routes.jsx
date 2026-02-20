@@ -2,9 +2,8 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
-import { useAuth } from "./contexts/AuthContext";
+import { useAuth } from "contexts/AuthContext";
 
-// Lazy load pages for better performance
 const Landing = lazy(() => import("pages/landing"));
 const LoginRegister = lazy(() => import("pages/login-register"));
 const ForgotPassword = lazy(() => import("pages/forgot-password"));

@@ -114,84 +114,88 @@ export const useNotifications = () => {
       
       if (!user) return;
 
-      channel = supabase
-        .channel('notifications-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('New notification received:', payload.new);
-            
-            // Add new notification to the list
-            setNotifications(prev => [payload.new, ...prev]);
-            setUnreadCount(prev => prev + 1);
+      try {
+        channel = supabase
+          .channel(`notifications-realtime-${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              console.log('New notification received:', payload.new);
+              
+              setNotifications(prev => [payload.new, ...prev]);
+              setUnreadCount(prev => prev + 1);
 
-            // Show browser notification if permission granted
-            if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification(payload.new.title, {
-                body: payload.new.message,
-                icon: '/logo.png',
-                badge: '/logo.png'
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(payload.new.title, {
+                  body: payload.new.message,
+                  icon: '/logo.png',
+                  badge: '/logo.png'
+                });
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              console.log('Notification updated:', payload.new);
+              
+              setNotifications(prev =>
+                prev.map(notif =>
+                  notif.id === payload.new.id ? payload.new : notif
+                )
+              );
+
+              if (payload.old.read !== payload.new.read) {
+                setUnreadCount(prev => payload.new.read ? Math.max(0, prev - 1) : prev + 1);
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'DELETE',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              console.log('Notification deleted:', payload.old);
+              
+              setNotifications(prev => {
+                const notification = prev.find(n => n.id === payload.old.id);
+                if (notification && !notification.read) {
+                  setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+                }
+                return prev.filter(notif => notif.id !== payload.old.id);
               });
             }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Notification updated:', payload.new);
-            
-            // Update notification in the list
-            setNotifications(prev =>
-              prev.map(notif =>
-                notif.id === payload.new.id ? payload.new : notif
-              )
-            );
-
-            // Update unread count if read status changed
-            if (payload.old.read !== payload.new.read) {
-              setUnreadCount(prev => payload.new.read ? Math.max(0, prev - 1) : prev + 1);
+          )
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('Notification subscription established');
+            } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+              console.error('Notification subscription error:', status);
             }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'DELETE',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Notification deleted:', payload.old);
-            
-            // Remove notification from the list
-            setNotifications(prev => {
-              const notification = prev.find(n => n.id === payload.old.id);
-              if (notification && !notification.read) {
-                setUnreadCount(prevCount => Math.max(0, prevCount - 1));
-              }
-              return prev.filter(notif => notif.id !== payload.old.id);
-            });
-          }
-        )
-        .subscribe();
+          });
+      } catch (error) {
+        console.error('Error setting up notification subscription:', error);
+      }
     };
 
     setupRealtimeSubscription();
 
-    // Cleanup subscription on unmount
     return () => {
       if (channel) {
         supabase.removeChannel(channel);

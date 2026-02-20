@@ -10,18 +10,26 @@ const BottomTabNavigation = () => {
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Load unread message count
   useEffect(() => {
     const loadUnreadCount = async () => {
       if (!user) return;
       
-      const { count } = await getUnreadMessageCount(user.id);
-      setUnreadCount(count);
+      try {
+        const { count, error } = await getUnreadMessageCount(user.id);
+        if (error) {
+          console.warn('Failed to load unread count:', error);
+          setUnreadCount(0);
+        } else {
+          setUnreadCount(count || 0);
+        }
+      } catch (err) {
+        console.warn('Error loading unread count:', err);
+        setUnreadCount(0);
+      }
     };
 
     loadUnreadCount();
 
-    // Refresh count every 30 seconds
     const interval = setInterval(loadUnreadCount, 30000);
     return () => clearInterval(interval);
   }, [user]);
